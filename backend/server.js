@@ -109,28 +109,7 @@ app.post("/api/login", async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: "服务器内部错误",
-    });
-  }
-});
-
-// 获取首页商品的数据
-app.get("/api/nav-items-default", async (req, res) => {
-  try {
-    //查询图片路径、商品名称和简介
-    const result = await pool.query(
-      "SELECT * FROM product_info WHERE is_display = true"
-    );
-
-    res.json({
-      success: true,
-      message: "获取数据成功",
-      result: result.rows,
-    });
-  } catch (error) {
-    console.error("获取nav-items错误:", error);
+    console.error( err);
     res.status(500).json({
       success: false,
       message: "服务器内部错误",

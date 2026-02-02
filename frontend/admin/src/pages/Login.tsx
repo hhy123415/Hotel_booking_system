@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import type { ChangeEvent, SubmitEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import style from "../css/Login.module.css";
@@ -11,15 +11,6 @@ const api = axios.create({
   timeout: 5000,
 });
 
-interface LoginResponse {
-  success: boolean;
-  message?: string;
-  user: {
-    name: string;
-    id: string;
-  };
-}
-
 interface FormData {
   username: string;
   password: string;
@@ -29,6 +20,15 @@ interface Errors {
   username?: string;
   password?: string;
   submit?: string;
+}
+
+interface LoginResponse {
+  success: boolean;
+  message?: string;
+  user: {
+    name: string;
+    id: string;
+  };
 }
 
 function Login() {
@@ -73,6 +73,11 @@ function Login() {
 
   const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    // 清除之前的submit错误
+    if (errors.submit) {
+      setErrors((prev) => ({ ...prev, submit: undefined }));
+    }
 
     // 输入验证
     const validationErrors = validateForm();
