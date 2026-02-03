@@ -33,7 +33,7 @@ app.post("/api/register", async (req, res) => {
     // 检查用户是否已存在
     const userExists = await pool.query(
       "SELECT * FROM user_info WHERE user_name = $1",
-      [username]
+      [username],
     );
 
     if (userExists.rows.length > 0) {
@@ -43,21 +43,30 @@ app.post("/api/register", async (req, res) => {
       });
     }
 
+    // 检查邮箱是否已存在
+    const emailExists = await pool.query(
+      "SELECT * FROM user_info WHERE email = $1",
+      [username],
+    );
+
+    if (userExists.rows.length > 0) {
+      return res.status(409).json({
+        success: false,
+        message: "邮箱已存在",
+      });
+    }
+
     //密码加密（待实现）
 
     // 插入新用户
     const result = await pool.query(
-      "INSERT INTO user_info (user_name, password, user_email) VALUES ($1, $2,$3) RETURNING user_id, user_name",
-      [username, password, email]
+      "INSERT INTO user_info (user_name, password, email) VALUES ($1, $2,$3)",
+      [username, password, email],
     );
 
     res.status(201).json({
       success: true,
       message: "注册成功",
-      user: {
-        id: result.rows[0].user_id,
-        name: result.rows[0].user_name,
-      },
     });
   } catch (err) {
     console.error("注册错误:", err);
@@ -76,7 +85,7 @@ app.post("/api/login", async (req, res) => {
     // 查询用户
     const result = await pool.query(
       "SELECT * FROM user_info WHERE user_name = $1",
-      [username]
+      [username],
     );
 
     if (result.rows.length === 0) {
@@ -103,13 +112,10 @@ app.post("/api/login", async (req, res) => {
     res.json({
       success: true,
       message: "登录成功",
-      user: {
-        id: user.user_id,
-        name: user.user_name,
-      },
+      user_name: user.user_name,
     });
   } catch (err) {
-    console.error( err);
+    console.error(err);
     res.status(500).json({
       success: false,
       message: "服务器内部错误",

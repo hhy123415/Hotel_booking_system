@@ -1,5 +1,4 @@
-/* Login.css */
-.login-container {
+.register-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -11,7 +10,7 @@
     "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
 }
 
-.login-wrapper {
+.register-wrapper {
   background: white;
   border-radius: 20px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
@@ -32,24 +31,17 @@
   }
 }
 
-.login-header {
+.register-header {
   text-align: center;
   margin-bottom: 40px;
 }
 
-.login-title {
-  font-size: 2.2rem;
-  color: #333;
-  margin-bottom: 10px;
-  font-weight: 700;
-}
-
-.login-subtitle {
+.register-title {
   color: #666;
-  font-size: 0.95rem;
+  font-size: 1.9rem;
 }
 
-.login-form {
+.register-form {
   margin-bottom: 30px;
 }
 
@@ -96,28 +88,6 @@
   display: block;
 }
 
-.form-options {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 25px;
-}
-
-.forgot-password {
-  background: none;
-  border: none;
-  color: #667eea;
-  font-size: 0.9rem;
-  cursor: pointer;
-  padding: 4px 8px;
-  transition: color 0.3s ease;
-}
-
-.forgot-password:hover {
-  color: #764ba2;
-  text-decoration: underline;
-}
-
 .submit-error {
   background-color: #ffe6e6;
   color: #ff4757;
@@ -128,7 +98,7 @@
   font-size: 0.9rem;
 }
 
-.login-button {
+.register-button {
   width: 100%;
   padding: 16px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -142,12 +112,12 @@
   margin-bottom: 20px;
 }
 
-.login-button:hover:not(:disabled) {
+.register-button:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
 }
 
-.login-button:disabled {
+.register-button:disabled {
   opacity: 0.7;
   cursor: not-allowed;
 }
@@ -198,12 +168,12 @@
   text-align: center;
 }
 
-.register-link {
+.link {
   color: #666;
   font-size: 0.95rem;
 }
 
-.register-button {
+.login-button {
   background: none;
   border: none;
   color: #667eea;
@@ -213,46 +183,28 @@
   transition: color 0.3s ease;
 }
 
-.register-button:hover {
+.login-button:hover {
   color: #764ba2;
   text-decoration: underline;
 }
 
 /* 响应式设计 */
 @media (max-width: 480px) {
-  .login-wrapper {
+  .register-wrapper {
     padding: 30px 25px;
-  }
-
-  .login-title {
-    font-size: 1.8rem;
   }
 
   .form-input {
     padding: 12px 14px;
   }
 
-  .login-button {
+  .register-button {
     padding: 14px;
-  }
-
-  .form-options {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
-  }
-
-  .forgot-password {
-    align-self: flex-end;
   }
 }
 
 @media (max-width: 360px) {
-  .login-wrapper {
+  .register-wrapper {
     padding: 25px 20px;
-  }
-
-  .login-title {
-    font-size: 1.6rem;
   }
 }

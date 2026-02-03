@@ -43,7 +43,12 @@ function NavBar() {
             <li>
               <Link
                 to="/login"
-                className={location.pathname === "/login" ? styles.active : ""}
+                className={
+                  location.pathname === "/login" ||
+                  location.pathname === "/register"
+                    ? styles.active
+                    : ""
+                }
               >
                 登录
               </Link>

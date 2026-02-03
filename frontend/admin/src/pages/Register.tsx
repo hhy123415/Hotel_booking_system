@@ -1,9 +1,8 @@
 import { useState } from "react";
 import type { ChangeEvent, SubmitEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import style from "../css/Login.module.css";
+import style from "../css/Register.module.css";
 import axios, { AxiosError } from "axios";
-import { useAuth } from "../hooks/useAuth";
 
 // 创建axios实例，配置基础URL
 const api = axios.create({
@@ -14,29 +13,30 @@ const api = axios.create({
 interface FormData {
   username: string;
   password: string;
+  email: string;
 }
 
 interface Errors {
   username?: string;
   password?: string;
   submit?: string;
+  email?: string;
 }
 
-interface LoginResponse {
+interface RegisterResponse {
   success: boolean;
   message?: string;
-  user_name?: string;
 }
 
-function Login() {
+function Register() {
   const [formData, setFormData] = useState<FormData>({
     username: "",
     password: "",
+    email: "",
   }); //表单数据
-  const [errors, setErrors] = useState<Errors>({}); //登录错误
+  const [errors, setErrors] = useState<Errors>({}); //注册错误
   const [isLoading, setIsLoading] = useState<boolean>(false); //加载状态
   const navigate = useNavigate(); //导航跳转
-  const { login } = useAuth();
 
   // 处理表单数据改变
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -65,6 +65,10 @@ function Login() {
       newErrors.password = "密码长度至少6位";
     }
 
+    //邮箱格式验证可由input type属性实现
+    if (!formData.email) {
+      newErrors.email = "请输入邮箱";
+    }
     return newErrors;
   };
 
@@ -89,26 +93,25 @@ function Login() {
     try {
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      const response = await api.post<LoginResponse>("/login", {
+      const response = await api.post<RegisterResponse>("/register", {
         username: formData.username,
         password: formData.password,
+        email: formData.email,
       });
 
       if (response.data.success) {
-        // 登录成功后的处理
-        login(formData.username);
-        alert(`欢迎回来，${response.data.user_name}!`);
-        navigate("/");
+        alert("注册成功，请重新登录")
+        navigate("/login");
       } else {
-        setErrors({ submit: response.data.message || "登录失败" });
+        setErrors({ submit: response.data.message || "注册失败" });
       }
     } catch (error) {
-      console.error("登录失败:", error);
+      console.error("注册失败:", error);
       if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<LoginResponse>;
+        const axiosError = error as AxiosError<RegisterResponse>;
         // 服务器返回了错误状态码
         setErrors({
-          submit: axiosError.response?.data?.message || "登录失败",
+          submit: axiosError.response?.data?.message || "注册失败",
         });
       } else {
         // 未连接
@@ -119,24 +122,20 @@ function Login() {
     }
   };
 
-  const handleForgotPassword = () => {
-    alert("待制作中");
-  };
-
-  const handleRegisterRedirect = () => {
-    // 跳转到注册页面
-    navigate("/register");
+  const handleLoginRedirect = () => {
+    // 可以跳转到登录页面
+    navigate("/login");
   };
 
   return (
-    <div className={style[`login-container`]}>
-      <div className={style["login-wrapper"]}>
-        <div className={style["login-header"]}>
-          <h1 className={style["login-title"]}>欢迎回来</h1>
-          <p className={style["login-subtitle"]}>请登录您的账户</p>
+    <div className={style[`register-container`]}>
+      <div className={style["register-wrapper"]}>
+        <div className={style["register-header"]}>
+          <p className={style["register-title"]}>请注册您的账户</p>
         </div>
 
-        <form className={style["login-form"]} onSubmit={handleSubmit}>
+        {/* 注册用户名输入项 */}
+        <form className={style["register-form"]} onSubmit={handleSubmit}>
           <div className={style["form-group"]}>
             <label htmlFor="username" className={style["form-label"]}>
               用户名
@@ -149,13 +148,13 @@ function Login() {
               onChange={handleChange}
               className={`${style["form-input"]} ${errors.username ? style.error : ""}`}
               placeholder="请输入用户名"
-              autoComplete="username"
             />
             {errors.username && (
               <span className={style["error-message"]}>{errors.username}</span>
             )}
           </div>
 
+          {/* 注册密码输入项 */}
           <div className={style["form-group"]}>
             <label htmlFor="password" className={style["form-label"]}>
               密码
@@ -167,21 +166,30 @@ function Login() {
               value={formData.password}
               onChange={handleChange}
               className={`${style["form-input"]} ${errors.password ? style.error : ""}`}
-              placeholder="请输入密码"
+              placeholder="请输入至少6位密码"
             />
             {errors.password && (
               <span className={style["error-message"]}>{errors.password}</span>
             )}
           </div>
 
-          <div className={style["form-options"]}>
-            <button
-              type="button"
-              className={style["forgot-password"]}
-              onClick={handleForgotPassword}
-            >
-              忘记密码？
-            </button>
+          {/* 注册邮箱输入项 */}
+          <div className={style["form-group"]}>
+            <label htmlFor="email" className={style["form-label"]}>
+              邮箱
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              className={`${style["form-input"]} ${errors.email ? style.error : ""}`}
+              placeholder="请输入邮箱"
+            />
+            {errors.password && (
+              <span className={style["error-message"]}>{errors.email}</span>
+            )}
           </div>
 
           {errors.submit && (
@@ -190,16 +198,16 @@ function Login() {
 
           <button
             type="submit"
-            className={style["login-button"]}
+            className={style["register-button"]}
             disabled={isLoading}
           >
             {isLoading ? (
               <span className={style["loading-spinner"]}>
                 <span className={style["spinner"]}></span>
-                登录中...
+                注册中...
               </span>
             ) : (
-              "登录"
+              "注册"
             )}
           </button>
         </form>
@@ -209,14 +217,14 @@ function Login() {
         </div>
 
         <div className={style["alternative-login"]}>
-          <p className={style["register-link"]}>
-            还没有账户？{" "}
+          <p className={style["link"]}>
+            已有账户？{" "}
             <button
               type="button"
-              className={style["register-button"]}
-              onClick={handleRegisterRedirect}
+              className={style["login-button"]}
+              onClick={handleLoginRedirect}
             >
-              立即注册
+              立即登录
             </button>
           </p>
         </div>
@@ -225,4 +233,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default Register;
