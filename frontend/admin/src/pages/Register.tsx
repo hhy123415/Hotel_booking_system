@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { ChangeEvent, SubmitEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import style from "../css/Register.module.css";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 
 // 创建axios实例，配置基础URL
 const api = axios.create({
@@ -10,17 +10,16 @@ const api = axios.create({
   timeout: 5000,
 });
 
+type Role = "user" | "admin";
 interface FormData {
   username: string;
   password: string;
   email: string;
+  adminCode: string;
 }
 
-interface Errors {
-  username?: string;
-  password?: string;
+interface Errors extends Partial<FormData> {
   submit?: string;
-  email?: string;
 }
 
 interface RegisterResponse {
@@ -29,21 +28,34 @@ interface RegisterResponse {
 }
 
 function Register() {
+  //选择的注册角色类型
+  const [role, setRole] = useState<Role>("user");
+  //表单数据
   const [formData, setFormData] = useState<FormData>({
     username: "",
     password: "",
     email: "",
-  }); //表单数据
-  const [errors, setErrors] = useState<Errors>({}); //注册错误
-  const [isLoading, setIsLoading] = useState<boolean>(false); //加载状态
-  const navigate = useNavigate(); //导航跳转
+    adminCode: "",
+  });
+  //注册错误
+  const [errors, setErrors] = useState<Errors>({});
+  //加载状态
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  //导航跳转
+  const navigate = useNavigate();
 
+  // 切换注册类型时重置错误和部分数据
+  const handleRoleChange = (newRole: Role) => {
+    setRole(newRole);
+    setErrors({});
+    setFormData((prev) => ({ ...prev, adminCode: "" }));
+  };
   // 处理表单数据改变
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
+  const handleFormChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: value,
     }));
     // 清除对应字段的错误
     if (errors[name as keyof Errors]) {
@@ -69,16 +81,17 @@ function Register() {
     if (!formData.email) {
       newErrors.email = "请输入邮箱";
     }
+
+    // 如果是管理员，必须填写验证码
+    if (role === "admin" && !formData.adminCode.trim()) {
+      newErrors.adminCode = "请输入管理员专用注册码";
+    }
     return newErrors;
   };
 
   const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    // 清除之前的submit错误
-    if (errors.submit) {
-      setErrors((prev) => ({ ...prev, submit: undefined }));
-    }
+    setErrors({});
 
     // 输入验证
     const validationErrors = validateForm();
@@ -91,16 +104,13 @@ function Register() {
 
     // API调用
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
       const response = await api.post<RegisterResponse>("/register", {
-        username: formData.username,
-        password: formData.password,
-        email: formData.email,
+        ...formData,
+        role: role,
       });
 
       if (response.data.success) {
-        alert("注册成功，请重新登录")
+        alert(`${role === "admin" ? "管理员" : "用户"}注册成功，请重新登录`);
         navigate("/login");
       } else {
         setErrors({ submit: response.data.message || "注册失败" });
@@ -108,10 +118,9 @@ function Register() {
     } catch (error) {
       console.error("注册失败:", error);
       if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<RegisterResponse>;
         // 服务器返回了错误状态码
         setErrors({
-          submit: axiosError.response?.data?.message || "注册失败",
+          submit: error.response?.data?.message || "注册失败",
         });
       } else {
         // 未连接
@@ -131,7 +140,25 @@ function Register() {
     <div className={style[`register-container`]}>
       <div className={style["register-wrapper"]}>
         <div className={style["register-header"]}>
-          <p className={style["register-title"]}>请注册您的账户</p>
+          <p className={style["register-title"]}>请选择您要注册的账号类型</p>
+        </div>
+
+        {/* 角色切换 Tab */}
+        <div className={style["role-tabs"]}>
+          <button
+            type="button"
+            className={`${style["tab-btn"]} ${role === "user" ? style.active : ""}`}
+            onClick={() => handleRoleChange("user")}
+          >
+            普通用户
+          </button>
+          <button
+            type="button"
+            className={`${style["tab-btn"]} ${role === "admin" ? style.active : ""}`}
+            onClick={() => handleRoleChange("admin")}
+          >
+            管理员
+          </button>
         </div>
 
         {/* 注册用户名输入项 */}
@@ -145,7 +172,7 @@ function Register() {
               id="username"
               name="username"
               value={formData.username}
-              onChange={handleChange}
+              onChange={handleFormChange}
               className={`${style["form-input"]} ${errors.username ? style.error : ""}`}
               placeholder="请输入用户名"
             />
@@ -164,7 +191,7 @@ function Register() {
               id="password"
               name="password"
               value={formData.password}
-              onChange={handleChange}
+              onChange={handleFormChange}
               className={`${style["form-input"]} ${errors.password ? style.error : ""}`}
               placeholder="请输入至少6位密码"
             />
@@ -183,7 +210,7 @@ function Register() {
               id="email"
               name="email"
               value={formData.email}
-              onChange={handleChange}
+              onChange={handleFormChange}
               className={`${style["form-input"]} ${errors.email ? style.error : ""}`}
               placeholder="请输入邮箱"
             />
@@ -191,6 +218,26 @@ function Register() {
               <span className={style["error-message"]}>{errors.email}</span>
             )}
           </div>
+
+          {/* 管理员额外字段：动态渲染 */}
+          {role === "admin" && (
+            <div className={style["form-group"]}>
+              <label className={style["form-label"]}>管理员注册码</label>
+              <input
+                type="text"
+                name="adminCode"
+                value={formData.adminCode}
+                onChange={handleFormChange}
+                placeholder="请输入由系统发放的注册码"
+                className={`${style["form-input"]} ${errors.adminCode ? style.error : ""}`}
+              />
+              {errors.adminCode && (
+                <span className={style["error-message"]}>
+                  {errors.adminCode}
+                </span>
+              )}
+            </div>
+          )}
 
           {errors.submit && (
             <div className={style["submit-error"]}>{errors.submit}</div>
@@ -201,14 +248,9 @@ function Register() {
             className={style["register-button"]}
             disabled={isLoading}
           >
-            {isLoading ? (
-              <span className={style["loading-spinner"]}>
-                <span className={style["spinner"]}></span>
-                注册中...
-              </span>
-            ) : (
-              "注册"
-            )}
+            {isLoading
+              ? "注册中..."
+              : `作为${role === "admin" ? "管理员" : "普通用户"}注册`}
           </button>
         </form>
 

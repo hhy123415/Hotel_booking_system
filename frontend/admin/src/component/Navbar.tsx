@@ -28,7 +28,8 @@ function NavBar() {
           {auth.isLoggedIn ? (
             <>
               <li className={styles["welcome-message"]}>
-                欢迎回来，{auth.username}！
+                欢迎回来，{auth.isAdmin ? "管理员" : "用户"}
+                {auth.username}！
               </li>
               <li>
                 <button

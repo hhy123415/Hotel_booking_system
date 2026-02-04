@@ -27,7 +27,7 @@ app.use(express.json()); // 解析JSON请求体
 
 // 注册接口
 app.post("/api/register", async (req, res) => {
-  const { username, password, email } = req.body;
+  const { username, password, email, adminCode, role } = req.body;
 
   try {
     // 检查用户是否已存在
@@ -46,10 +46,10 @@ app.post("/api/register", async (req, res) => {
     // 检查邮箱是否已存在
     const emailExists = await pool.query(
       "SELECT * FROM user_info WHERE email = $1",
-      [username],
+      [email],
     );
 
-    if (userExists.rows.length > 0) {
+    if (emailExists.rows.length > 0) {
       return res.status(409).json({
         success: false,
         message: "邮箱已存在",
@@ -58,10 +58,23 @@ app.post("/api/register", async (req, res) => {
 
     //密码加密（待实现）
 
+    //判断是否是管理员(这里先采用固定的注册码，后续可添加动态生成一定时效的注册码功能)
+    let is_admin = false;
+    if (role == "admin") {
+      if (adminCode === "6666") {
+        is_admin = true;
+      } else {
+        return res.status(409).json({
+          success: false,
+          message: "注册码错误",
+        });
+      }
+    }
+
     // 插入新用户
     const result = await pool.query(
-      "INSERT INTO user_info (user_name, password, email) VALUES ($1, $2,$3)",
-      [username, password, email],
+      "INSERT INTO user_info (user_name, password, email,is_admin) VALUES ($1, $2,$3,$4)",
+      [username, password, email, is_admin],
     );
 
     res.status(201).json({
@@ -113,6 +126,7 @@ app.post("/api/login", async (req, res) => {
       success: true,
       message: "登录成功",
       user_name: user.user_name,
+      isAdmin: user.is_admin,
     });
   } catch (err) {
     console.error(err);

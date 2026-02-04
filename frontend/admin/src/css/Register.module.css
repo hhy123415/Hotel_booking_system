@@ -41,6 +41,33 @@
   font-size: 1.9rem;
 }
 
+.role-tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  background: #f0f2f5;
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.tab-btn {
+  flex: 1;
+  border: none;
+  background: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.3s;
+  border-radius: 6px;
+  color: #666;
+}
+
+.tab-btn.active {
+  background: #fff;
+  color: #1890ff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-weight: bold;
+}
+
 .register-form {
   margin-bottom: 30px;
 }
