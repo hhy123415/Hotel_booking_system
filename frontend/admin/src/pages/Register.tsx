@@ -222,10 +222,13 @@ function Register() {
           {/* 管理员额外字段：动态渲染 */}
           {role === "admin" && (
             <div className={style["form-group"]}>
-              <label className={style["form-label"]}>管理员注册码</label>
+              <label htmlFor="adminCode" className={style["form-label"]}>
+                管理员注册码
+              </label>
               <input
                 type="text"
                 name="adminCode"
+                id="adminCode"
                 value={formData.adminCode}
                 onChange={handleFormChange}
                 placeholder="请输入由系统发放的注册码"

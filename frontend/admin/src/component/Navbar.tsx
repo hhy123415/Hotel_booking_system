@@ -29,7 +29,10 @@ function NavBar() {
             <>
               <li className={styles["welcome-message"]}>
                 欢迎回来，{auth.isAdmin ? "管理员" : "用户"}
-                {auth.username}！
+                <span style={{ fontWeight: "bold", color: "orange" }}>
+                  {auth.username}
+                </span>
+                ！
               </li>
               <li>
                 <button
