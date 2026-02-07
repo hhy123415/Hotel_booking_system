@@ -5,6 +5,7 @@ import { AuthProvider } from "../component/AuthProvider";
 import NavBar from "../component/Navbar";
 import Login from "./Login";
 import Register from "./Register";
+import Adm_query from "./admin_query";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/query" element={<Adm_query />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
