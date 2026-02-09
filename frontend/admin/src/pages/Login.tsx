@@ -4,12 +4,7 @@ import { useNavigate } from "react-router-dom";
 import style from "../css/Login.module.css";
 import axios, { AxiosError } from "axios";
 import { useAuth } from "../hooks/useAuth";
-
-// 创建axios实例，配置基础URL
-const api = axios.create({
-  baseURL: "http://localhost:3001/api", //后期需要根据服务器ip地址进行调整，不能使用localhost，否则无法正常访问
-  timeout: 5000,
-});
+import api from "../api/axios"
 
 interface FormData {
   username: string;

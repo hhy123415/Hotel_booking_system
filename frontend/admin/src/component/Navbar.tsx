@@ -39,7 +39,7 @@ function NavBar() {
                   onClick={handleLogout}
                   className={styles["logout-button"]}
                 >
-                  注销
+                  登出
                 </button>
               </li>
             </>
