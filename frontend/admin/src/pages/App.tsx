@@ -7,6 +7,8 @@ import Login from "./Login";
 import Register from "./Register";
 import Adm_query from "./admin_query";
 import AdminRoute from "../component/AdminRoute";
+import UserRoute from "../component/UserRoute";
+import New_req from "./new_req";
 
 function App() {
   return (
@@ -26,6 +28,14 @@ function App() {
                 <AdminRoute>
                   <Adm_query />
                 </AdminRoute>
+              }
+            />
+            <Route
+              path="/new-request"
+              element={
+                <UserRoute>
+                  <New_req />
+                </UserRoute>
               }
             />
           </Routes>

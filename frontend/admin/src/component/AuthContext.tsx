@@ -2,13 +2,14 @@ import { createContext } from "react";
 
 export interface AuthState {
   isLoggedIn: boolean;
+  user_id: string;
   username: string;
   isAdmin: boolean;
 }
 
 export interface AuthContextType {
   auth: AuthState;
-  login: (username: string, isAdmin: boolean) => void;
+  login: (user_id: string, username: string, isAdmin: boolean) => void;
   logout: () => void;
 }
 

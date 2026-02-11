@@ -12,6 +12,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const [auth, setAuth] = useState<AuthState>(() => {
     return {
       isLoggedIn: false,
+      user_id: "",
       username: "",
       isAdmin: false,
     };
@@ -25,6 +26,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         if (res.data.success) {
           setAuth({
             isLoggedIn: true,
+            user_id: res.data.user.user_id,
             username: res.data.user.username,
             isAdmin: res.data.user.isAdmin,
           });
@@ -36,15 +38,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     checkAuthStatus();
   }, []);
 
-  const login = (username: string, isAdmin: boolean) => {
-    setAuth({ isLoggedIn: true, username, isAdmin });
+  const login = (user_id: string, username: string, isAdmin: boolean) => {
+    setAuth({ isLoggedIn: true, user_id, username, isAdmin });
   };
 
   const logout = async () => {
     try {
       await api.post("/logout");
     } finally {
-      setAuth({ isLoggedIn: false, username: "", isAdmin: false });
+      setAuth({
+        isLoggedIn: false,
+        user_id: "",
+        username: "",
+        isAdmin: false,
+      });
     }
   };
 

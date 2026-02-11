@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import style from "../css/Login.module.css";
 import axios, { AxiosError } from "axios";
 import { useAuth } from "../hooks/useAuth";
-import api from "../api/axios"
+import api from "../api/axios";
 
 interface FormData {
   username: string;
@@ -20,6 +20,7 @@ interface Errors {
 interface LoginResponse {
   success: boolean;
   message?: string;
+  user_id?: string;
   user_name?: string;
   isAdmin?: boolean;
 }
@@ -92,7 +93,11 @@ function Login() {
 
       if (response.data.success) {
         // 登录成功后的处理
-        login(formData.username, response.data.isAdmin ?? false); //后端未传入isAdmin值时，默认为false
+        login(
+          response.data.user_id ?? "", //空时默认为空
+          formData.username,
+          response.data.isAdmin ?? false, //后端未传入isAdmin值时，默认为false
+        );
         alert(`欢迎回来，${response.data.user_name}!`);
         navigate("/");
       } else {

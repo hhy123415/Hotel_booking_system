@@ -1,53 +1,3 @@
-//数据库表结构
-
-//                                         Table "public.user_info"
-//   Column   |          Type          | Collation | Nullable |                  Default
-// -----------+------------------------+-----------+----------+--------------------------------------------
-//  user_id   | integer                |           | not null | nextval('user_info_user_id_seq'::regclass)
-//  user_name | character varying(50)  |           | not null |
-//  password  | character varying(255) |           | not null |
-//  email     | character varying(100) |           | not null |
-//  is_admin  | boolean                |           |          | false
-// Indexes:
-//     "user_info_pkey" PRIMARY KEY, btree (user_id)
-//     "user_info_email_unique" UNIQUE CONSTRAINT, btree (email)
-//     "user_info_user_name_key" UNIQUE CONSTRAINT, btree (user_name)
-
-//                                           Table "public.hotels"
-//       Column      |           Type           | Collation | Nullable |              Default
-// ------------------+--------------------------+-----------+----------+------------------------------------
-//  id               | integer                  |           | not null | nextval('hotels_id_seq'::regclass)
-//  name_zh          | character varying(255)   |           | not null |
-//  name_en          | character varying(255)   |           | not null |
-//  address          | text                     |           | not null |
-//  star_rating      | integer                  |           |          |
-//  operating_period | daterange                |           | not null |
-//  description      | text                     |           |          |
-//  created_at       | timestamp with time zone |           |          | CURRENT_TIMESTAMP
-//  updated_at       | timestamp with time zone |           |          | CURRENT_TIMESTAMP
-// Indexes:
-//     "hotels_pkey" PRIMARY KEY, btree (id)
-//     "idx_hotels_operating_period" gist (operating_period)
-// Check constraints:
-//     "hotels_star_rating_check" CHECK (star_rating >= 1 AND star_rating <= 5)
-// Referenced by:
-//     TABLE "room_types" CONSTRAINT "room_types_hotel_id_fkey" FOREIGN KEY (hotel_id) REFERENCES hotels(id) ON DELETE CASCADE
-
-//                                          Table "public.room_types"
-//      Column      |           Type           | Collation | Nullable |                Default
-// -----------------+--------------------------+-----------+----------+----------------------------------------
-//  id              | integer                  |           | not null | nextval('room_types_id_seq'::regclass)
-//  hotel_id        | integer                  |           |          |
-//  name            | character varying(100)   |           | not null |
-//  base_price      | numeric(10,2)            |           | not null |
-//  capacity        | integer                  |           |          | 2
-//  total_inventory | integer                  |           |          | 10
-//  created_at      | timestamp with time zone |           |          | CURRENT_TIMESTAMP
-// Indexes:
-//     "room_types_pkey" PRIMARY KEY, btree (id)
-// Foreign-key constraints:
-//     "room_types_hotel_id_fkey" FOREIGN KEY (hotel_id) REFERENCES hotels(id) ON DELETE CASCADE
-
 import express, { Request, Response } from "express";
 import { Pool, QueryResult } from "pg";
 import bcrypt from "bcrypt";
@@ -56,6 +6,7 @@ import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import { authenticateToken, authenticateAdmin } from "./auth";
 import jwt from "jsonwebtoken";
+
 dotenv.config();
 
 // 定义用户在数据库中的结构
@@ -65,13 +16,6 @@ interface UserRow {
   password: string;
   email: string;
   is_admin: boolean;
-}
-
-// 定义 Token 载荷类型
-interface JwtPayload {
-  userId: number;
-  username: string;
-  isAdmin: boolean;
 }
 
 // 连接数据库配置
@@ -229,6 +173,7 @@ app.post("/api/login", async (req: Request, res: Response) => {
     res.json({
       success: true,
       message: "登录成功",
+      user_id: user.user_id,
       user_name: user.user_name,
       isAdmin: user.is_admin,
     });
@@ -246,6 +191,7 @@ app.get("/api/me", authenticateToken, (req: any, res: Response) => {
   res.json({
     success: true,
     user: {
+      user_id: req.user.user_id,
       username: req.user.username,
       isAdmin: req.user.isAdmin,
     },
@@ -269,10 +215,114 @@ app.get(
   authenticateToken,
   authenticateAdmin,
   async (req, res) => {
-    const users = await pool.query(
-      "SELECT user_id, user_name, email FROM user_info",
-    );
-    res.json({ success: true, data: users.rows });
+    try {
+      // 获取分页参数，设置默认值
+      const page = parseInt(String(req.query.page)) || 1;
+      const pageSize = parseInt(String(req.query.pageSize)) || 10;
+      const offset = (page - 1) * pageSize;
+
+      // 查询总条数（用于计算分页）
+      const countResult = await pool.query("SELECT COUNT(*) FROM hotels");
+      const totalCount = parseInt(countResult.rows[0].count);
+
+      // 分页查询数据
+      // 注意：这里使用了 order by 以保证分页顺序稳定
+      const queryText = `
+        SELECT 
+          name_zh, name_en, address, star_rating, 
+          operating_period, description, created_at, updated_at 
+        FROM hotels 
+        ORDER BY created_at DESC 
+        LIMIT $1 OFFSET $2
+      `;
+      const dataResult = await pool.query(queryText, [pageSize, offset]);
+
+      // 返回包含分页信息的数据
+      res.json({
+        success: true,
+        data: dataResult.rows,
+        pagination: {
+          total: totalCount,
+          page: page,
+          pageSize: pageSize,
+          totalPages: Math.ceil(totalCount / pageSize),
+        },
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "服务器内部错误" });
+    }
+  },
+);
+
+app.post(
+  "/api/new_request",
+  authenticateToken,
+  async (req: Request, res: Response) => {
+    try {
+      const {
+        name_zh,
+        name_en,
+        address,
+        star_rating,
+        operating_period,
+        description,
+        user_id,
+      } = req.body;
+
+      // 基础后台校验
+      if (
+        !name_zh ||
+        !name_en ||
+        !address ||
+        !star_rating ||
+        !operating_period
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "必填内容缺失",
+        });
+      }
+
+      const insertQuery = `
+        INSERT INTO hotel_applications (
+          user_id, 
+          name_zh, 
+          name_en, 
+          address, 
+          star_rating, 
+          operating_period, 
+          description,
+          status
+        ) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+        RETURNING id;
+      `;
+      const values = [
+        user_id,
+        name_zh,
+        name_en,
+        address,
+        star_rating,
+        operating_period,
+        description || null,
+        "pending", // 初始状态为待审核
+      ];
+
+      const result = await pool.query(insertQuery, values);
+      //返回成功响应
+      return res.status(201).json({
+        success: true,
+        message: "申请提交成功",
+        applicationId: result.rows[0].id,
+      });
+    } catch (err: unknown) {
+      console.error("数据库操作失败:", err);
+      return res.status(500).json({
+        success: false,
+        message: "服务器内部错误",
+      });
+    }
   },
 );
 

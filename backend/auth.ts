@@ -6,7 +6,11 @@ dotenv.config(); // 确保在这个文件读取 process.env 之前加载
 
 const SECRET_KEY = process.env.JWT_SECRET || "";
 
-export const authenticateToken = (req: any, res: Response, next: NextFunction) => {
+export const authenticateToken = (
+  req: any,
+  res: Response,
+  next: NextFunction,
+) => {
   const token = req.cookies.token;
 
   if (!token) {
@@ -16,7 +20,9 @@ export const authenticateToken = (req: any, res: Response, next: NextFunction) =
   jwt.verify(token, SECRET_KEY, (err: any, decoded: any) => {
     if (err) {
       console.log(err);
-      return res.status(401).json({ success: false, message: "登录失效，请重新登录" });
+      return res
+        .status(401)
+        .json({ success: false, message: "登录失效，请重新登录" });
     }
     req.user = decoded; // 将解码后的用户信息（userId, username, isAdmin）存入 req
     next();
@@ -27,14 +33,13 @@ export const authenticateToken = (req: any, res: Response, next: NextFunction) =
 export const authenticateAdmin = (req: any, res: Response, next: any) => {
   // 先运行基础令牌验证
   if (!req.user) {
-    console.log(3);
     return res.status(401).json({ success: false, message: "未授权" });
-    
   }
 
   if (req.user.isAdmin !== true) {
-    console.log(4);
-    return res.status(403).json({ success: false, message: "权限不足，需要管理员身份" });
+    return res
+      .status(403)
+      .json({ success: false, message: "权限不足，需要管理员身份" });
   }
 
   next();

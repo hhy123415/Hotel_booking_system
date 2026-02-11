@@ -1,0 +1,74 @@
+//数据库表结构
+
+//                                         Table "public.user_info"
+//   Column   |          Type          | Collation | Nullable |                  Default
+// -----------+------------------------+-----------+----------+--------------------------------------------
+//  user_id   | integer                |           | not null | nextval('user_info_user_id_seq'::regclass)
+//  user_name | character varying(50)  |           | not null |
+//  password  | character varying(255) |           | not null |
+//  email     | character varying(100) |           | not null |
+//  is_admin  | boolean                |           |          | false
+// Indexes:
+//     "user_info_pkey" PRIMARY KEY, btree (user_id)
+//     "user_info_email_unique" UNIQUE CONSTRAINT, btree (email)
+//     "user_info_user_name_key" UNIQUE CONSTRAINT, btree (user_name)
+
+//                                           Table "public.hotels"
+//       Column      |           Type           | Collation | Nullable |              Default               
+// ------------------+--------------------------+-----------+----------+------------------------------------
+//  id               | integer                  |           | not null | nextval('hotels_id_seq'::regclass)
+//  name_zh          | character varying(255)   |           | not null | 
+//  name_en          | character varying(255)   |           | not null | 
+//  address          | text                     |           | not null | 
+//  star_rating      | integer                  |           |          | 
+//  operating_period | daterange                |           | not null | 
+//  description      | text                     |           |          | 
+//  created_at       | timestamp with time zone |           |          | CURRENT_TIMESTAMP
+//  updated_at       | timestamp with time zone |           |          | CURRENT_TIMESTAMP
+//  active           | boolean                  |           |          | 
+// Indexes:
+//     "hotels_pkey" PRIMARY KEY, btree (id)
+//     "idx_hotels_operating_period" gist (operating_period)
+// Check constraints:
+//     "hotels_star_rating_check" CHECK (star_rating >= 1 AND star_rating <= 5)
+// Referenced by:
+//     TABLE "room_types" CONSTRAINT "room_types_hotel_id_fkey" FOREIGN KEY (hotel_id) REFERENCES hotels(id) ON DELETE CASCADE
+
+
+//                                          Table "public.room_types"
+//      Column      |           Type           | Collation | Nullable |                Default
+// -----------------+--------------------------+-----------+----------+----------------------------------------
+//  id              | integer                  |           | not null | nextval('room_types_id_seq'::regclass)
+//  hotel_id        | integer                  |           |          |
+//  name            | character varying(100)   |           | not null |
+//  base_price      | numeric(10,2)            |           | not null |
+//  capacity        | integer                  |           |          | 2
+//  total_inventory | integer                  |           |          | 10
+//  created_at      | timestamp with time zone |           |          | CURRENT_TIMESTAMP
+// Indexes:
+//     "room_types_pkey" PRIMARY KEY, btree (id)
+// Foreign-key constraints:
+//     "room_types_hotel_id_fkey" FOREIGN KEY (hotel_id) REFERENCES hotels(id) ON DELETE CASCADE
+
+//                                           Table "public.hotel_applications"
+//       Column      |           Type           | Collation | Nullable |                    Default                     
+// ------------------+--------------------------+-----------+----------+------------------------------------------------
+//  id               | integer                  |           | not null | nextval('hotel_applications_id_seq'::regclass)
+//  user_id          | integer                  |           | not null | 
+//  name_zh          | character varying(255)   |           | not null | 
+//  name_en          | character varying(255)   |           | not null | 
+//  address          | text                     |           | not null | 
+//  star_rating      | integer                  |           |          | 
+//  operating_period | daterange                |           | not null | 
+//  description      | text                     |           |          | 
+//  status           | application_status       |           |          | 'pending'::application_status
+//  admin_remark     | text                     |           |          | 
+//  created_at       | timestamp with time zone |           |          | CURRENT_TIMESTAMP
+//  processed_at     | timestamp with time zone |           |          | 
+// Indexes:
+//     "hotel_applications_pkey" PRIMARY KEY, btree (id)
+//     "idx_hotel_apps_period" gist (operating_period)
+// Check constraints:
+//     "hotel_applications_star_rating_check" CHECK (star_rating >= 1 AND star_rating <= 5)
+// Foreign-key constraints:
+//     "fk_user" FOREIGN KEY (user_id) REFERENCES user_info(user_id) ON DELETE CASCADE
