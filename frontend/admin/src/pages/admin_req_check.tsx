@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import api from "../api/axios";
 import { useAuth } from "../hooks/useAuth";
 import styles from "../css/AdmCheck.module.css";
-import type ApplicationPayload from "../../../../GlobalInterface";
+import type { ApplicationCheck } from "../../../../GlobalInterface";
 import dayjs from "dayjs";
 
 function Adm_req_check() {
-  const [data, setData] = useState<ApplicationPayload[]>([]);
+  const [data, setData] = useState<ApplicationCheck[]>([]);
   const [loading, setLoading] = useState(false);
 
   // 分页状态
@@ -164,7 +164,7 @@ function Adm_req_check() {
               下一页
             </button>
           </div>
-          
+
           {/* 弹窗 */}
           {isModalOpen && (
             <div className={styles.modalOverlay}>

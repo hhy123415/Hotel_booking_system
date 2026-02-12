@@ -11,7 +11,7 @@ dotenv.config();
 
 // 定义用户在数据库中的结构
 interface UserRow {
-  user_id?: number;
+  user_id?: string;
   user_name: string;
   password: string;
   email: string;
@@ -152,7 +152,7 @@ app.post("/api/login", async (req: Request, res: Response) => {
     // 登录成功,生成token
     const token = jwt.sign(
       {
-        userId: user.user_id,
+        id: user.user_id,
         username: user.user_name,
         isAdmin: user.is_admin,
       },
@@ -210,6 +210,7 @@ app.get("/", (req: Request, res: Response) => {
   });
 });
 
+//管理员获取酒店信息
 app.get(
   "/api/admin_query",
   authenticateToken,
@@ -448,6 +449,58 @@ app.post(
     }
   },
 );
+
+//获取自己的申请记录
+app.get("/api/my_req", authenticateToken, async (req: Request, res) => {
+  try {
+    // 获取分页参数，设置默认值
+    const page = parseInt(String(req.query.page)) || 1;
+    const pageSize = parseInt(String(req.query.pageSize)) || 10;
+    const user_id = req.user?.id;
+    console.log(user_id);
+    if (!user_id) {
+      // 在 authenticateToken 成功执行的情况下，这通常不应该发生，
+      // 但作为防御性编程，仍然可以增加检查
+      return res.status(401).json({ error: "用户ID未提供或认证失败" });
+    }
+    const offset = (page - 1) * pageSize;
+
+    // 查询待处理总条数（用于计算分页）
+    const countResult = await pool.query(
+      "SELECT COUNT(*) FROM hotel_applications WHERE user_id = $1",
+      [user_id],
+    );
+
+    const totalCount = parseInt(countResult.rows[0].count);
+
+    // 分页查询数据
+    // 注意：这里使用了 order by 以保证分页顺序稳定
+    const queryText = `
+        SELECT 
+          id, name_zh, name_en, address, star_rating, 
+          operating_period, description, status
+        FROM hotel_applications WHERE user_id = $1
+        ORDER BY created_at DESC 
+        LIMIT $2 OFFSET $3
+      `;
+    const dataResult = await pool.query(queryText, [user_id, pageSize, offset]);
+
+    // 返回包含分页信息的数据
+    res.json({
+      success: true,
+      data: dataResult.rows,
+      pagination: {
+        total: totalCount,
+        page: page,
+        pageSize: pageSize,
+        totalPages: Math.ceil(totalCount / pageSize),
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "服务器内部错误" });
+  }
+});
 
 const PORT = 3001;
 app.listen(PORT, () => {

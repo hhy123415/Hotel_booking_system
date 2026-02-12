@@ -10,6 +10,7 @@ import AdminRoute from "../component/AdminRoute";
 import Adm_req_check from "./admin_req_check";
 import UserRoute from "../component/UserRoute";
 import New_req from "./new_req";
+import My_req from "./my_req";
 
 function App() {
   return (
@@ -44,6 +45,14 @@ function App() {
               element={
                 <UserRoute>
                   <New_req />
+                </UserRoute>
+              }
+            />
+            <Route
+              path="/my-pending"
+              element={
+                <UserRoute>
+                  <My_req />
                 </UserRoute>
               }
             />

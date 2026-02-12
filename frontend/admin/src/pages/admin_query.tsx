@@ -2,18 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../api/axios";
 import { useAuth } from "../hooks/useAuth";
 import styles from "../css/AdmQuery.module.css";
-
-// 定义酒店数据接口
-interface Hotel {
-  name_zh: string;
-  name_en: string;
-  address: string;
-  star_rating: number;
-  operating_period: string; // PG daterange 会以字符串形式返回，如 "[2023-01-01,2024-01-01)"
-  description: string;
-  created_at: string;
-  updated_at: string;
-}
+import type { Hotel } from "../../../../GlobalInterface";
 
 function Adm_query() {
   const [data, setData] = useState<Hotel[]>([]);

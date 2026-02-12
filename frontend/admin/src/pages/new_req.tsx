@@ -3,7 +3,7 @@ import api from "../api/axios";
 import { useAuth } from "../hooks/useAuth";
 import styles from "../css/new_req.module.css";
 import axios, { AxiosError } from "axios";
-import type ApplicationPayload from "../../../../GlobalInterface";
+import type {ApplicationPayload} from "../../../../GlobalInterface";
 
 interface BackendError {
   message?: string;
