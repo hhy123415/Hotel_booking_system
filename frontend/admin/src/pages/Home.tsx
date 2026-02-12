@@ -60,7 +60,7 @@ function Home() {
                   className={`${styles.menuBtn} ${styles.userTheme}`}
                 >
                   <span className={styles.icon}>⏳</span>
-                  我的待审核申请
+                  我的申请
                 </Link>
               </>
             )}

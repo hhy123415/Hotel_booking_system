@@ -7,6 +7,7 @@ import Login from "./Login";
 import Register from "./Register";
 import Adm_query from "./admin_query";
 import AdminRoute from "../component/AdminRoute";
+import Adm_req_check from "./admin_req_check";
 import UserRoute from "../component/UserRoute";
 import New_req from "./new_req";
 
@@ -27,6 +28,14 @@ function App() {
               element={
                 <AdminRoute>
                   <Adm_query />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/audit"
+              element={
+                <AdminRoute>
+                  <Adm_req_check />
                 </AdminRoute>
               }
             />

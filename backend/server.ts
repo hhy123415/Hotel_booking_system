@@ -255,6 +255,129 @@ app.get(
   },
 );
 
+//获取申请信息
+app.get(
+  "/api/admin_check",
+  authenticateToken,
+  authenticateAdmin,
+  async (req, res) => {
+    try {
+      // 获取分页参数，设置默认值
+      const page = parseInt(String(req.query.page)) || 1;
+      const pageSize = parseInt(String(req.query.pageSize)) || 10;
+      const offset = (page - 1) * pageSize;
+
+      // 查询待处理总条数（用于计算分页）
+      const countResult = await pool.query(
+        "SELECT COUNT(*) FROM hotel_applications WHERE status = $1",
+        ["pending"],
+      );
+
+      const totalCount = parseInt(countResult.rows[0].count);
+
+      // 分页查询数据
+      // 注意：这里使用了 order by 以保证分页顺序稳定
+      const queryText = `
+        SELECT 
+          id, user_id, name_zh, name_en, address, star_rating, 
+          operating_period, description, created_at
+        FROM hotel_applications WHERE status = $1
+        ORDER BY created_at DESC 
+        LIMIT $2 OFFSET $3
+      `;
+      const dataResult = await pool.query(queryText, [
+        "pending",
+        pageSize,
+        offset,
+      ]);
+
+      // 返回包含分页信息的数据
+      res.json({
+        success: true,
+        data: dataResult.rows,
+        pagination: {
+          total: totalCount,
+          page: page,
+          pageSize: pageSize,
+          totalPages: Math.ceil(totalCount / pageSize),
+        },
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "服务器内部错误" });
+    }
+  },
+);
+
+// 处理审核请求
+app.post(
+  "/api/handle_application",
+  authenticateToken,
+  authenticateAdmin,
+  async (req, res) => {
+    const { id, action, admin_remark } = req.body; // action: 'approve' 或 'reject'
+
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN"); // 开启事务
+
+      if (action === "approve") {
+        // 获取申请详情
+        const appRes = await client.query(
+          "SELECT * FROM hotel_applications WHERE id = $1 AND status = 'pending' FOR UPDATE",
+          [id],
+        );
+
+        if (appRes.rowCount === 0) {
+          throw new Error("申请不存在或已被处理");
+        }
+
+        const app = appRes.rows[0];
+
+        // 插入到 hotels 表
+        const insertHotelQuery = `
+          INSERT INTO hotels (name_zh, name_en, address, star_rating, operating_period, description, active)
+          VALUES ($1, $2, $3, $4, $5, $6, true)
+        `;
+        await client.query(insertHotelQuery, [
+          app.name_zh,
+          app.name_en,
+          app.address,
+          app.star_rating,
+          app.operating_period,
+          app.description,
+        ]);
+
+        // 更新申请表状态
+        await client.query(
+          "UPDATE hotel_applications SET status = 'approved', admin_remark = $1, processed_at = CURRENT_TIMESTAMP WHERE id = $2",
+          [admin_remark, id],
+        );
+      } else {
+        // 拒绝逻辑比较简单，只更新状态
+        const result = await client.query(
+          "UPDATE hotel_applications SET status = 'rejected', admin_remark = $1, processed_at = CURRENT_TIMESTAMP WHERE id = $2 AND status = 'pending'",
+          [admin_remark, id],
+        );
+        if (result.rowCount === 0) throw new Error("申请不存在或已被处理");
+      }
+
+      await client.query("COMMIT"); // 提交事务
+      res.json({
+        success: true,
+        message: action === "approve" ? "已批准并导入酒店" : "已拒绝申请",
+      });
+    } catch (err) {
+      await client.query("ROLLBACK"); // 回滚
+      console.error(err);
+      res.status(500).json({ error: "服务器内部错误" });
+    } finally {
+      client.release();
+    }
+  },
+);
+
 app.post(
   "/api/new_request",
   authenticateToken,

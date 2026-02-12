@@ -6,4 +6,6 @@ export default interface ApplicationPayload {
   operating_period: string;
   description?: string;
   user_id?: string;
+  created_at?: string;
+  id?: string; //申请记录id
 }
