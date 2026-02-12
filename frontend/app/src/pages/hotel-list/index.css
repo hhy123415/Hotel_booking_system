@@ -1,0 +1,68 @@
+.hotel-list-page {
+  min-height: 100vh;
+  background-color: #f5f7fa;
+  padding: 24rpx 24rpx 48rpx;
+  box-sizing: border-box;
+}
+
+.list-header {
+  margin-bottom: 16rpx;
+}
+
+.list-subtitle {
+  font-size: 26rpx;
+  color: #7b8794;
+}
+
+.highlight {
+  color: #2563eb;
+}
+
+.list-scroll {
+  height: calc(100vh - 120rpx);
+}
+
+.hotel-card {
+  background-color: #ffffff;
+  border-radius: 20rpx;
+  padding: 24rpx 24rpx 28rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 6rpx 18rpx rgba(15, 23, 42, 0.05);
+}
+
+.hotel-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+
+.hotel-name-zh {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1f2933;
+}
+
+.hotel-star {
+  font-size: 24rpx;
+  color: #f59e0b;
+}
+
+.hotel-name-en {
+  font-size: 24rpx;
+  color: #9fb3c8;
+  margin-bottom: 8rpx;
+}
+
+.hotel-address {
+  font-size: 24rpx;
+  color: #7b8794;
+}
+
+.empty {
+  margin-top: 80rpx;
+  text-align: center;
+  color: #9fb3c8;
+  font-size: 26rpx;
+}
+

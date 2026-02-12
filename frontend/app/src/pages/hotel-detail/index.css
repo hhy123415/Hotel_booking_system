@@ -1,0 +1,106 @@
+.hotel-detail-page {
+  min-height: 100vh;
+  background-color: #f5f7fa;
+  padding: 24rpx 24rpx 120rpx;
+  box-sizing: border-box;
+}
+
+.hotel-header-card {
+  background-color: #ffffff;
+  border-radius: 24rpx;
+  padding: 28rpx 24rpx 32rpx;
+  box-shadow: 0 8rpx 24rpx rgba(15, 23, 42, 0.06);
+  margin-bottom: 24rpx;
+}
+
+.hotel-name-zh {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1f2933;
+}
+
+.hotel-name-en {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: #9fb3c8;
+}
+
+.hotel-address {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: #7b8794;
+}
+
+.hotel-star {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: #f59e0b;
+}
+
+.section {
+  margin-top: 20rpx;
+  background-color: #ffffff;
+  border-radius: 24rpx;
+  padding: 24rpx 24rpx 28rpx;
+}
+
+.section-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1f2933;
+}
+
+.section-content {
+  margin-top: 12rpx;
+  font-size: 26rpx;
+  color: #7b8794;
+  line-height: 1.6;
+}
+
+.room-card {
+  margin-top: 16rpx;
+  padding-top: 12rpx;
+  border-top: 1px solid #e4e7eb;
+}
+
+.room-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4rpx;
+}
+
+.room-name {
+  font-size: 26rpx;
+  color: #1f2933;
+}
+
+.room-price {
+  font-size: 26rpx;
+  color: #2563eb;
+  font-weight: 500;
+}
+
+.room-meta {
+  font-size: 24rpx;
+  color: #9fb3c8;
+}
+
+.footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 12rpx 24rpx 24rpx;
+  box-sizing: border-box;
+  background: linear-gradient(to top, rgba(15, 23, 42, 0.06), transparent);
+}
+
+.reserve-button {
+  width: 100%;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  font-size: 30rpx;
+}
+
