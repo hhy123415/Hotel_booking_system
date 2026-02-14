@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../api/axios";
 import { useAuth } from "../hooks/useAuth";
 import styles from "../css/AdmCheck.module.css";
-import type { ApplicationCheck } from "../../../../GlobalInterface";
+import type { ApplicationCheck } from "../../Interface";
 import dayjs from "dayjs";
 
 function Adm_req_check() {

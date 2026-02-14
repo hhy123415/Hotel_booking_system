@@ -1,3 +1,4 @@
+
 //商户申请酒店信息
 export interface ApplicationPayload {
   name_zh: string;
@@ -37,12 +38,12 @@ export interface ApplicationCheck {
 
 // 定义酒店数据接口
 export interface Hotel {
+  id: number;
   name_zh: string;
   name_en: string;
   address: string;
-  star_rating: number | null;
+  star_rating: number;
   operating_period: string; // PG daterange 会以字符串形式返回，如 "[2023-01-01,2024-01-01)"
   description?: string;
   created_at: string;
-  updated_at: string;
 }

@@ -8,7 +8,7 @@ dotenv.config(); // 确保在这个文件读取 process.env 之前加载
 // 1. 定义 JWT Payload 的类型
 // 假设你的 JWT payload 中包含 id, username 和 isAdmin
 interface JwtPayload {
-  id: string; // 用户ID，用于数据库查询等
+  user_id: string; // 用户ID，用于数据库查询等
   username: string; // 用户名
   isAdmin: boolean; // 是否是管理员
   // 如果你的 JWT payload 中有其他字段，也请在这里添加

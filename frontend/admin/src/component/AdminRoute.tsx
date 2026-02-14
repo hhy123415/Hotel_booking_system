@@ -11,6 +11,7 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
   const { auth } = useAuth();
 
   if (!auth.isLoggedIn || !auth.isAdmin) {
+    alert("未登录或没有权限");
     return <Navigate to="/" />;
   }
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../api/axios";
 import { useAuth } from "../hooks/useAuth";
 import styles from "../css/My_req.module.css";
-import type { ApplicationRecord } from "../../../../GlobalInterface";
+import type { ApplicationRecord } from "../../Interface";
 
 function My_req() {
   const [data, setData] = useState<ApplicationRecord[]>([]);
