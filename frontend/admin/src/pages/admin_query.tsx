@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../api/axios";
 import styles from "../css/AdmQuery.module.css";
 import type { Hotel } from "../../Interface";
+import Pagination from "../component/pagination";
 
 function Adm_query() {
   const [data, setData] = useState<Hotel[]>([]);
@@ -13,9 +14,11 @@ function Adm_query() {
   const [totalPages, setTotalPages] = useState(1);
   const pageSize = 10;
 
-   // 编辑状态
+  // 编辑状态
   const [editingHotelId, setEditingHotelId] = useState<number | null>(null); // 存储当前正在编辑的酒店ID
-  const [currentEditingData, setCurrentEditingData] = useState<Omit<Hotel, "created_at"> | null>(null); // 存储编辑中的数据
+  const [currentEditingData, setCurrentEditingData] = useState<Hotel | null>(
+    null,
+  ); // 存储编辑中的数据
 
   const fetchAdminData = async (page: number) => {
     setLoading(true);
@@ -63,6 +66,7 @@ function Adm_query() {
       star_rating: hotel.star_rating,
       operating_period: hotel.operating_period,
       description: hotel.description,
+      active: hotel.active,
     });
   };
 
@@ -73,13 +77,28 @@ function Adm_query() {
   };
 
   // 处理输入框变化
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
+  ) => {
     const { name, value } = e.target;
     setCurrentEditingData((prev) => {
       if (!prev) return null;
+
+      let newValue: string | number | boolean = value; // 定义一个通用类型变量
+
+      if (name === "star_rating") {
+        newValue = parseInt(value, 10);
+      } else if (name === "active") {
+        // --- 核心修改点：将字符串 "true" 或 "false" 转换为布尔值 ---
+        newValue = value === "true"; // 如果 value 是 "true" 则为 true，否则为 false
+      }
+      // 对于其他字段（如name_zh, name_en, address, operating_period, description），newValue 保持为字符串
+
       return {
         ...prev,
-        [name]: name === "star_rating" ? parseInt(value, 10) : value, // star_rating 转换为数字
+        [name]: newValue,
       };
     });
   };
@@ -97,8 +116,10 @@ function Adm_query() {
       // 更新前端的data状态，替换掉原有的酒店数据
       setData((prevData) =>
         prevData.map((hotel) =>
-          hotel.id === editingHotelId ? { ...hotel, ...currentEditingData, created_at: hotel.created_at } : hotel
-        )
+          hotel.id === editingHotelId
+            ? { ...hotel, ...currentEditingData }
+            : hotel,
+        ),
       );
 
       setEditingHotelId(null); // 退出编辑模式
@@ -132,12 +153,15 @@ function Adm_query() {
                   <th>星级</th>
                   <th>运营周期</th>
                   <th>描述信息</th>
+                  <th>是否上线</th>
                   <th>操作</th> {/* 新增操作列 */}
                 </tr>
               </thead>
               <tbody>
                 {data.map((hotel) => (
-                  <tr key={hotel.id}> {/* 使用 hotel.id 作为 key */}
+                  <tr key={hotel.id}>
+                    {" "}
+                    {/* 使用 hotel.id 作为 key */}
                     <td>{hotel.id}</td>
                     {editingHotelId === hotel.id && currentEditingData ? (
                       <>
@@ -175,32 +199,60 @@ function Adm_query() {
                             onChange={handleInputChange}
                             className={styles.editSelect}
                           >
-                            {[1, 2, 3, 4, 5].map(star => (
-                              <option key={star} value={star}>{star}</option>
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <option key={star} value={star}>
+                                {star}
+                              </option>
                             ))}
                           </select>
                         </td>
                         <td>
-                          <input
-                            type="text"
+                          <textarea
                             name="operating_period"
                             value={currentEditingData.operating_period}
                             onChange={handleInputChange}
-                            className={styles.editInput}
+                            className={styles.editTextArea}
                           />
                         </td>
-                        <td><input
-                            type="text"
+                        <td>
+                          <textarea
                             name="description"
                             value={currentEditingData.description}
                             onChange={handleInputChange}
-                            className={styles.editInput}
-                          /></td>
+                            className={styles.editTextArea}
+                          />
+                        </td>
                         <td>
-                          <button onClick={handleSaveEdit} className={`${styles.btn} ${styles.saveBtn}`}>
+                          <select
+                            name="active"
+                            value={String(currentEditingData.active)}
+                            onChange={handleInputChange}
+                            className={styles.editSelect}
+                          >
+                            {[
+                              { value: true, label: "上线" },
+                              { value: false, label: "下线" },
+                            ].map((option) => (
+                              <option
+                                key={String(option.value)}
+                                value={String(option.value)}
+                              >
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                        <td>
+                          <button
+                            onClick={handleSaveEdit}
+                            className={`${styles.btn} ${styles.saveBtn}`}
+                          >
                             保存
                           </button>
-                          <button onClick={handleCancelEdit} className={`${styles.btn} ${styles.cancelBtn}`}>
+                          <button
+                            onClick={handleCancelEdit}
+                            className={`${styles.btn} ${styles.cancelBtn}`}
+                          >
                             取消
                           </button>
                         </td>
@@ -217,8 +269,12 @@ function Adm_query() {
                           {hotel.operating_period}
                         </td>
                         <td>{hotel.description}</td>
+                        <td>{hotel.active ? "上线中" : "已下线"}</td>
                         <td>
-                          <button onClick={() => handleEditClick(hotel)} className={`${styles.btn} ${styles.editBtn}`}>
+                          <button
+                            onClick={() => handleEditClick(hotel)}
+                            className={`${styles.btn} ${styles.editBtn}`}
+                          >
                             编辑
                           </button>
                         </td>
@@ -230,27 +286,11 @@ function Adm_query() {
             </table>
           </div>
 
-          <div className={styles.pagination}>
-            <button
-              className={styles.btn}
-              disabled={currentPage === 1 || loading}
-              onClick={() => handlePageChange(currentPage - 1)}
-            >
-              上一页
-            </button>
-
-            <span className={styles.pageInfo}>
-              第 <strong>{currentPage}</strong> 页 / 共 {totalPages} 页
-            </span>
-
-            <button
-              className={styles.btn}
-              disabled={currentPage === totalPages || loading}
-              onClick={() => handlePageChange(currentPage + 1)}
-            >
-              下一页
-            </button>
-          </div>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
         </>
       )}
     </div>

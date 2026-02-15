@@ -63,42 +63,6 @@
   color: #888;
 }
 
-/* 分页控制 */
-.pagination {
-  margin-top: 24px;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 12px;
-}
-
-.pageInfo {
-  font-size: 14px;
-  color: #666;
-}
-
-.btn {
-  padding: 6px 16px;
-  border: 1px solid #d9d9d9;
-  background-color: #fff;
-  color: #333;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.btn:hover:not(:disabled) {
-  color: #40a9ff;
-  border-color: #40a9ff;
-}
-
-.btn:disabled {
-  background-color: #f5f5f5;
-  color: #bfbfbf;
-  cursor: not-allowed;
-  border-color: #d9d9d9;
-}
-
 .loadingText {
   text-align: center;
   padding: 40px;

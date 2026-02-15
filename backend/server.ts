@@ -262,6 +262,7 @@ app.put(
       star_rating,
       operating_period,
       description,
+      active,
     } = req.body; // 从请求体获取更新数据
 
     // 1. 数据验证
@@ -293,8 +294,9 @@ app.put(
           star_rating = $4,
           operating_period = $5,
           description = $6,
-          updated_at = CURRENT_TIMESTAMP
-        WHERE id = $7
+          updated_at = CURRENT_TIMESTAMP,
+          active = $7
+        WHERE id = $8
         RETURNING *; -- 返回更新后的记录
       `;
       const result: QueryResult<HotelRow> = await pool.query(updateQuery, [
@@ -304,6 +306,7 @@ app.put(
         star_rating,
         operating_period,
         description || null, // description 可能为空
+        active,
         hotelId,
       ]);
 
@@ -460,6 +463,8 @@ app.post(
   },
 );
 
+//---商户申请新的酒店---
+
 app.post(
   "/api/new_request",
   authenticateToken,
@@ -472,8 +477,9 @@ app.post(
         star_rating,
         operating_period,
         description,
-        user_id,
       } = req.body;
+
+      const user_id = req.user?.user_id;
 
       // 基础后台校验
       if (
@@ -531,18 +537,13 @@ app.post(
   },
 );
 
-//获取自己的申请记录
+//---商户查看自己的申请记录---
 app.get("/api/my_req", authenticateToken, async (req: Request, res) => {
   try {
     // 获取分页参数，设置默认值
     const page = parseInt(String(req.query.page)) || 1;
     const pageSize = parseInt(String(req.query.pageSize)) || 10;
     const user_id = req.user?.user_id;
-    if (!user_id) {
-      // 在 authenticateToken 成功执行的情况下，这通常不应该发生，
-      // 但作为防御性编程，仍然可以增加检查
-      return res.status(401).json({ error: "用户ID未提供或认证失败" });
-    }
     const offset = (page - 1) * pageSize;
 
     // 查询待处理总条数（用于计算分页）
@@ -558,7 +559,7 @@ app.get("/api/my_req", authenticateToken, async (req: Request, res) => {
     const queryText = `
         SELECT 
           id, name_zh, name_en, address, star_rating, 
-          operating_period, description, status
+          operating_period, description, status, admin_remark
         FROM hotel_applications WHERE user_id = $1
         ORDER BY created_at DESC 
         LIMIT $2 OFFSET $3

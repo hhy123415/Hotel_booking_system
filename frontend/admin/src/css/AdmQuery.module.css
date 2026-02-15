@@ -42,14 +42,16 @@
   border-collapse: collapse;
   margin-bottom: 20px;
   background-color: #fff;
+  table-layout: fixed; /* 使列宽固定 */
 }
 
 .table th,
 .table td {
   border: 1px solid #ddd;
-  padding: 12px 15px; /* 增加内边距 */
+  padding: 12px 15px;
   text-align: left;
-  vertical-align: middle; /* 垂直居中 */
+  vertical-align: middle;
+  word-wrap: break-word; /* 防止长单词撑开单元格 */
 }
 
 .table th {
@@ -57,6 +59,35 @@
   font-weight: bold;
   color: #333;
 }
+
+/* 为表头设置宽度，这些宽度将决定列的宽度 */
+.table th:nth-child(1) {
+  width: 5%;
+} /* ID */
+.table th:nth-child(2) {
+  width: 12%;
+} /* 中文名 */
+.table th:nth-child(3) {
+  width: 12%;
+} /* 英文名 */
+.table th:nth-child(4) {
+  width: 15%;
+} /* 地址 */
+.table th:nth-child(5) {
+  width: 8%;
+} /* 星级 */
+.table th:nth-child(6) {
+  width: 10%;
+} /* 运营周期 (可以根据实际内容调整) */
+.table th:nth-child(7) {
+  width: 18%;
+} /* 描述信息 (剩余空间分配) */
+.table th:nth-child(8) {
+  width: 8%;
+} /* 是否上线 */
+.table th:nth-child(9) {
+  width: 12%;
+} /* 操作 (需要容纳两个按钮) */
 
 .table tbody tr:nth-child(even) {
   background-color: #f5f5f5;
@@ -67,38 +98,38 @@
 }
 
 .starColumn {
-  width: 80px; /* 适当调整宽度 */
   text-align: center;
 }
 
 .periodColumn {
-  white-space: nowrap; /* 防止运营周期文本换行 */
+  white-space: normal; /* 允许运营周期文本换行，如果宽度不够 */
 }
 
-/* 编辑状态的输入框 */
-.editInput {
+/* 编辑状态的输入框、下拉框和按钮也要注意其box-sizing，以确保不超出父元素宽度 */
+.editInput,
+.editSelect,
+.editTextArea {
   width: 100%;
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  box-sizing: border-box; /* 确保padding和border不增加宽度 */
+  box-sizing: border-box; /* 确保 padding 和 border 不会增加元素总宽度 */
+  min-width: 0; /* 允许内容较少的输入框缩小 */
 }
 
-/* 编辑状态的下拉框 */
-.editSelect {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  box-sizing: border-box;
+/* textarea 样式 */
+.editTextArea {
+  min-height: 60px; /* 最小高度，保证可以看到几行 */
+  resize: vertical; /* 允许用户垂直方向拖拽调整大小 */
+  overflow-y: auto; /* 内容超出最小高度时显示滚动条 */
 }
 
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 15px;
-  margin-top: 20px;
+/* 针对操作列的按钮，可以设置一个最小宽度并允许换行，以适应单元格 */
+.table td:nth-child(9) button {
+  white-space: nowrap; /* 按钮文字不换行 */
+  margin-bottom: 5px; /* 如果按钮需要垂直堆叠 */
+  display: block; /* 每个按钮独占一行 */
+  width: 100%; /* 让按钮去填满可用宽度 */
 }
 
 .btn {
@@ -117,11 +148,6 @@
   opacity: 0.7;
 }
 
-.pageInfo {
-  font-size: 1.1em;
-  color: #555;
-}
-
 /* 新增的按钮样式 */
 .editBtn {
   background-color: #007bff;
@@ -132,10 +158,17 @@
   background-color: #0056b3;
 }
 
+/* 调整按钮样式，让它们在固定宽度的列中更合理 */
+.saveBtn,
+.cancelBtn {
+  padding: 8px 10px; /* 调整内边距 */
+  font-size: 0.9em; /* 调整字体大小 */
+  margin-right: 0; /* 如果是 block 元素则不需要右边距 */
+}
+
 .saveBtn {
   background-color: #28a745;
   color: white;
-  margin-right: 5px; /* 保存和取消按钮之间间距 */
 }
 
 .saveBtn:hover:not(:disabled) {

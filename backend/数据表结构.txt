@@ -13,26 +13,31 @@
 //     "user_info_email_unique" UNIQUE CONSTRAINT, btree (email)
 //     "user_info_user_name_key" UNIQUE CONSTRAINT, btree (user_name)
 
-//                                           Table "public.hotels"
-//       Column      |           Type           | Collation | Nullable |              Default               
-// ------------------+--------------------------+-----------+----------+------------------------------------
-//  id               | integer                  |           | not null | nextval('hotels_id_seq'::regclass)
-//  name_zh          | character varying(255)   |           | not null | 
-//  name_en          | character varying(255)   |           | not null | 
-//  address          | text                     |           | not null | 
-//  star_rating      | integer                  |           |          | 
-//  operating_period | daterange                |           | not null | 
-//  description      | text                     |           |          | 
-//  created_at       | timestamp with time zone |           |          | CURRENT_TIMESTAMP
-//  updated_at       | timestamp with time zone |           |          | CURRENT_TIMESTAMP
-//  active           | boolean                  |           |          | 
-// Indexes:
-//     "hotels_pkey" PRIMARY KEY, btree (id)
-//     "idx_hotels_operating_period" gist (operating_period)
-// Check constraints:
-//     "hotels_star_rating_check" CHECK (star_rating >= 1 AND star_rating <= 5)
-// Referenced by:
-//     TABLE "room_types" CONSTRAINT "room_types_hotel_id_fkey" FOREIGN KEY (hotel_id) REFERENCES hotels(id) ON DELETE CASCADE
+
+
+                                          Table "public.hotels"
+      Column      |           Type           | Collation | Nullable |              Default               
+------------------+--------------------------+-----------+----------+------------------------------------
+ id               | integer                  |           | not null | nextval('hotels_id_seq'::regclass)
+ name_zh          | character varying(255)   |           | not null | 
+ name_en          | character varying(255)   |           | not null | 
+ address          | text                     |           | not null | 
+ star_rating      | integer                  |           |          | 
+ operating_period | daterange                |           | not null | 
+ description      | text                     |           |          | 
+ created_at       | timestamp with time zone |           |          | CURRENT_TIMESTAMP
+ updated_at       | timestamp with time zone |           |          | CURRENT_TIMESTAMP
+ active           | boolean                  |           |          | 
+ user_id          | integer                  |           |          | 
+Indexes:
+    "hotels_pkey" PRIMARY KEY, btree (id)
+    "idx_hotels_operating_period" gist (operating_period)
+Check constraints:
+    "hotels_star_rating_check" CHECK (star_rating >= 1 AND star_rating <= 5)
+Foreign-key constraints:
+    "fk_hotels_user_id" FOREIGN KEY (user_id) REFERENCES user_info(user_id) ON DELETE RESTRICT
+Referenced by:
+    TABLE "room_types" CONSTRAINT "room_types_hotel_id_fkey" FOREIGN KEY (hotel_id) REFERENCES hotels(id) ON DELETE CASCADE
 
 
 //                                          Table "public.room_types"

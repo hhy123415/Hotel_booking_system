@@ -53,7 +53,7 @@ function Home() {
                   className={`${styles.menuBtn} ${styles.userTheme}`}
                 >
                   <span className={styles.icon}>➕</span>
-                  新的申请
+                  新的酒店申请
                 </Link>
                 <Link
                   to="/my-pending"

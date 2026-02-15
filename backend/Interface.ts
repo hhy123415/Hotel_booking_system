@@ -1,5 +1,5 @@
 export interface HotelRow {
-  id: number; 
+  id: number;
   name_zh: string;
   name_en: string;
   address: string;
@@ -8,7 +8,8 @@ export interface HotelRow {
   description?: string; // description 是可选的
   created_at: Date;
   updated_at: Date;
-  active: boolean; 
+  active: boolean;
+  user_id: number;
 }
 
 export interface UserRow {

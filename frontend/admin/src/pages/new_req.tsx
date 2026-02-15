@@ -3,7 +3,7 @@ import api from "../api/axios";
 import { useAuth } from "../hooks/useAuth";
 import styles from "../css/new_req.module.css";
 import axios, { AxiosError } from "axios";
-import type {ApplicationPayload} from "../../Interface";
+import type { ApplicationPayload } from "../../Interface";
 
 interface BackendError {
   message?: string;
@@ -11,7 +11,7 @@ interface BackendError {
 }
 
 function New_req() {
-  const { logout, auth } = useAuth();
+  const { logout } = useAuth();
   const [nameZh, setNameZh] = useState("");
   const [nameEn, setNameEn] = useState("");
   const [address, setAddress] = useState("");
@@ -28,8 +28,8 @@ function New_req() {
     if (!nameZh.trim()) return "请填写酒店中文名";
     if (!nameEn.trim()) return "请填写酒店英文名";
     if (!address.trim()) return "请填写地址";
-    if (!startDate || !endDate) return "请选择运营时间";
-    if (new Date(startDate) > new Date(endDate))
+    if (!startDate) return "请选择开始运营时间";
+    if (endDate && new Date(startDate) > new Date(endDate))
       return "开始日期不能晚于结束日期";
     if (starRating == "" || starRating < 1 || starRating > 5)
       return "星级须在 1 到 5 之间";
@@ -53,10 +53,9 @@ function New_req() {
       name_zh: nameZh.trim(),
       name_en: nameEn.trim(),
       address: address.trim(),
-      star_rating: starRating === "" ? null : Number(starRating),
+      star_rating: Number(starRating),
       operating_period,
       description: description.trim() || undefined,
-      user_id: auth.user_id,
     };
 
     setLoading(true);
@@ -64,6 +63,7 @@ function New_req() {
     try {
       const res = await api.post("/new_request", payload);
       if (res.data.success) {
+        alert("申请提交成功！");
         setSuccessMsg("申请提交成功，等待管理员审核。");
         // 清空表单
         setNameZh("");
@@ -168,13 +168,12 @@ function New_req() {
           </label>
 
           <label className={styles.label}>
-            运营结束日期 *
+            运营结束日期(可不填)
             <input
               className={styles.input}
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              required
             />
           </label>
         </div>

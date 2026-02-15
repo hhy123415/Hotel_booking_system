@@ -3,6 +3,7 @@ import api from "../api/axios";
 import { useAuth } from "../hooks/useAuth";
 import styles from "../css/My_req.module.css";
 import type { ApplicationRecord } from "../../Interface";
+import Pagination from "../component/pagination";
 
 function My_req() {
   const [data, setData] = useState<ApplicationRecord[]>([]);
@@ -15,13 +16,11 @@ function My_req() {
 
   const { logout, auth } = useAuth();
 
-  const fetchMyData = async (page: number, user_id: string) => {
+  const fetchMyData = async (page: number) => {
     setLoading(true);
     try {
       // 发送带分页参数的请求
-      const res = await api.get(
-        `/my_req?page=${page}&pageSize=${pageSize}&user_id=${user_id}`,
-      );
+      const res = await api.get(`/my_req?page=${page}&pageSize=${pageSize}`);
       setData(res.data.data);
       setTotalPages(res.data.pagination.totalPages);
     } catch (err) {
@@ -33,7 +32,7 @@ function My_req() {
   };
 
   useEffect(() => {
-    fetchMyData(currentPage, auth.user_id);
+    fetchMyData(currentPage);
   }, [currentPage, auth, logout]);
 
   // 处理页码改变
@@ -62,6 +61,7 @@ function My_req() {
                   <th>运营周期</th>
                   <th>描述信息</th>
                   <th>审核状态</th>
+                  <th>管理员备注</th>
                 </tr>
               </thead>
               <tbody>
@@ -77,34 +77,25 @@ function My_req() {
                       {hotel.operating_period}
                     </td>
                     <td>{hotel.description}</td>
-                    <td>{hotel.status}</td>
+                    <td>
+                      {hotel.status === "pending"
+                        ? "审核中"
+                        : hotel.status === "approved"
+                          ? "通过"
+                          : "拒绝"}
+                    </td>
+                    <td>{hotel.admin_remark}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
 
-          <div className={styles.pagination}>
-            <button
-              className={styles.btn}
-              disabled={currentPage === 1}
-              onClick={() => handlePageChange(currentPage - 1)}
-            >
-              上一页
-            </button>
-
-            <span className={styles.pageInfo}>
-              第 <strong>{currentPage}</strong> 页 / 共 {totalPages} 页
-            </span>
-
-            <button
-              className={styles.btn}
-              disabled={currentPage === totalPages}
-              onClick={() => handlePageChange(currentPage + 1)}
-            >
-              下一页
-            </button>
-          </div>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
         </>
       )}
     </div>
