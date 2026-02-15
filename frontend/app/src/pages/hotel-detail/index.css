@@ -104,3 +104,11 @@
   font-size: 30rpx;
 }
 
+.error-tip {
+  display: block;
+  padding: 32rpx 24rpx;
+  font-size: 28rpx;
+  color: #64748b;
+  text-align: center;
+}
+

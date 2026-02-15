@@ -1,7 +1,8 @@
 import type { FC } from 'react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { View, Text, Input, Button, Picker } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import Taro, { useDidShow } from '@tarojs/taro'
+import { getUser } from '../../services/auth'
 import './index.css'
 
 const FEATURED_HOTEL_ID = 1
@@ -11,6 +12,7 @@ const priceOptions = ['不限', '￥0-300', '￥300-600', '￥600+'] as const
 const tagOptions = ['亲子', '豪华', '免费停车', '含早餐'] as const
 
 const Index: FC = () => {
+  const [user, setUser] = useState<ReturnType<typeof getUser>>(null)
   const [keyword, setKeyword] = useState('')
   const [locationText, setLocationText] = useState('点击获取当前位置')
   const [checkInDate, setCheckInDate] = useState('')
@@ -18,6 +20,11 @@ const Index: FC = () => {
   const [starFilter, setStarFilter] = useState<number | 0>(0)
   const [priceFilter, setPriceFilter] = useState<string>('不限')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
+
+  const refreshUser = () => setUser(getUser())
+
+  useEffect(() => { refreshUser() }, [])
+  useDidShow(refreshUser)
 
   const handleLocate = () => {
     Taro.getLocation({
@@ -73,6 +80,20 @@ const Index: FC = () => {
 
   return (
     <View className='page index-page'>
+      {/* 登录/我的 入口 */}
+      <View className='index-user-bar'>
+        <Text
+          className='index-user-link'
+          onClick={() =>
+            Taro.navigateTo({
+              url: user ? '/pages/user-center/index' : '/pages/login/index',
+            })
+          }
+        >
+          {user ? `我的 (${user.nickname || user.user_name})` : '登录'}
+        </Text>
+      </View>
+
       {/* 顶部 Banner */}
       <View className='banner' onClick={handleBannerClick}>
         <View className='banner-content'>

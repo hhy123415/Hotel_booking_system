@@ -37,12 +37,21 @@ if (!SECRET_KEY) {
   process.exit(1);
 }
 
+/** 从请求中获取 JWT：优先 Cookie（管理端），其次 Authorization Bearer（小程序等） */
+function getTokenFromRequest(req: Request): string | undefined {
+  const cookieToken = req.cookies?.token;
+  if (cookieToken) return cookieToken;
+  const authHeader = req.headers.authorization;
+  if (authHeader?.startsWith("Bearer ")) return authHeader.slice(7);
+  return undefined;
+}
+
 export const authenticateToken = (
   req: Request, // 使用增强后的 Request 类型
   res: Response,
   next: NextFunction,
 ) => {
-  const token = req.cookies.token;
+  const token = getTokenFromRequest(req);
 
   if (!token) {
     return res.status(401).json({ success: false, message: "请先登录" });

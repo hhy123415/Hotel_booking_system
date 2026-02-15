@@ -4,11 +4,25 @@ import bcrypt from "bcrypt";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 import { authenticateToken, authenticateAdmin } from "./auth";
 import jwt from "jsonwebtoken";
 import type { HotelRow, UserRow } from "./Interface.ts";
 
 dotenv.config();
+
+const uploadDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (_req: unknown, _file: unknown, cb: (e: Error | null, d: string) => void) =>
+      cb(null, uploadDir),
+    filename: (_req: unknown, file: { originalname?: string }, cb: (e: Error | null, d: string) => void) =>
+      cb(null, `${Date.now()}-${file.originalname || "avatar"}`),
+  }),
+});
 
 // 连接数据库配置
 const pool = new Pool({
@@ -41,6 +55,7 @@ app.use(
 );
 
 app.use(express.json());
+app.use("/uploads", express.static(uploadDir));
 
 const SECRET_KEY = process.env.JWT_SECRET || "";
 
@@ -161,10 +176,11 @@ app.post("/api/login", async (req: Request, res: Response) => {
       path: "/", // 确保 cookie 在所有路径下可用
     });
 
-    // 返回用户信息给前端（不含 Token）
+    // 返回用户信息；小程序需要 token 存本地，管理端用 Cookie 即可
     res.json({
       success: true,
       message: "登录成功",
+      token,
       user_id: user.user_id,
       user_name: user.user_name,
       isAdmin: user.is_admin,
@@ -180,12 +196,31 @@ app.post("/api/login", async (req: Request, res: Response) => {
 
 // --- 获取当前用户信息接口 (AuthProvider 初始化时调用) ---
 app.get("/api/me", authenticateToken, async (req: Request, res: Response) => {
+  const user_id = req.user?.user_id;
+  let nickname: string | null = null;
+  let avatar_url: string | null = null;
+  if (user_id) {
+    try {
+      const r = await pool.query(
+        "SELECT nickname, avatar_url FROM user_info WHERE user_id = $1",
+        [user_id],
+      );
+      if (r.rows[0]) {
+        nickname = r.rows[0].nickname ?? null;
+        avatar_url = r.rows[0].avatar_url ?? null;
+      }
+    } catch {
+      // ignore
+    }
+  }
   res.json({
     success: true,
     user: {
       user_id: req.user?.user_id,
       username: req.user?.username,
       isAdmin: req.user?.isAdmin,
+      nickname,
+      avatar_url,
     },
   });
 });
@@ -195,6 +230,143 @@ app.post("/api/logout", (req: Request, res: Response) => {
   res.clearCookie("token");
   res.json({ success: true, message: "登出成功" });
 });
+
+// --- 微信小程序登录（code 换 openid，自动注册/登录）---
+const WECHAT_APPID = process.env.WECHAT_APPID || "";
+const WECHAT_SECRET = process.env.WECHAT_SECRET || "";
+
+app.post("/api/wx-login", async (req: Request, res: Response) => {
+  const { code } = req.body as { code?: string };
+  if (!code || !WECHAT_APPID || !WECHAT_SECRET) {
+    return res.status(400).json({
+      success: false,
+      message: "缺少 code 或未配置 WECHAT_APPID/WECHAT_SECRET",
+    });
+  }
+
+  try {
+    const url = `https://api.weixin.qq.com/sns/jscode2session?appid=${WECHAT_APPID}&secret=${WECHAT_SECRET}&js_code=${code}&grant_type=authorization_code`;
+    const wxRes = await fetch(url);
+    const wxData = (await wxRes.json()) as {
+      openid?: string;
+      errcode?: number;
+      errmsg?: string;
+    };
+
+    if (wxData.errcode || !wxData.openid) {
+      return res.status(401).json({
+        success: false,
+        message: wxData.errmsg || "微信登录失败",
+      });
+    }
+
+    const openid = wxData.openid;
+
+    let rows: { user_id: number; user_name: string; is_admin: boolean; nickname?: string; avatar_url?: string }[];
+    const existing = await pool.query(
+      "SELECT user_id, user_name, is_admin, nickname, avatar_url FROM user_info WHERE openid = $1",
+      [openid],
+    );
+    rows = existing.rows;
+
+    if (rows.length === 0) {
+      const user_name = "wx_" + openid.slice(-10);
+      const email = openid + "@wechat.local";
+      const hashedPassword = await bcrypt.hash(openid + Date.now(), 10);
+      await pool.query(
+        "INSERT INTO user_info (user_name, password, email, is_admin, openid) VALUES ($1, $2, $3, false, $4)",
+        [user_name, hashedPassword, email, openid],
+      );
+      const inserted = await pool.query(
+        "SELECT user_id, user_name, is_admin, nickname, avatar_url FROM user_info WHERE openid = $1",
+        [openid],
+      );
+      rows = inserted.rows;
+    }
+
+    const user = rows[0];
+    const token = jwt.sign(
+      {
+        user_id: user.user_id,
+        username: user.user_name,
+        isAdmin: user.is_admin,
+      },
+      SECRET_KEY,
+      { expiresIn: "24h" },
+    );
+
+    res.json({
+      success: true,
+      message: "登录成功",
+      token,
+      user_id: user.user_id,
+      user_name: user.user_name,
+      nickname: user.nickname ?? null,
+      avatar_url: user.avatar_url ?? null,
+      isAdmin: user.is_admin,
+    });
+  } catch (err) {
+    console.error("wx-login error:", err);
+    res.status(500).json({ success: false, message: "服务器内部错误" });
+  }
+});
+
+// --- 更新当前用户昵称/头像（小程序 头像昵称填写 后调用）---
+app.patch(
+  "/api/me/profile",
+  authenticateToken,
+  async (req: Request, res: Response) => {
+    const { nickname, avatar_url } = req.body as {
+      nickname?: string;
+      avatar_url?: string;
+    };
+    const user_id = req.user?.user_id;
+    if (!user_id) {
+      return res.status(401).json({ success: false, message: "请先登录" });
+    }
+    try {
+      const updates: string[] = [];
+      const values: (string | number)[] = [];
+      let idx = 1;
+      if (typeof nickname === "string") {
+        updates.push(`nickname = $${idx++}`);
+        values.push(nickname.trim().slice(0, 100));
+      }
+      if (typeof avatar_url === "string") {
+        updates.push(`avatar_url = $${idx++}`);
+        values.push(avatar_url.slice(0, 500));
+      }
+      if (updates.length === 0) {
+        return res.status(400).json({ success: false, message: "无有效更新" });
+      }
+      values.push(user_id);
+      await pool.query(
+        `UPDATE user_info SET ${updates.join(", ")} WHERE user_id = $${idx}`,
+        values,
+      );
+      res.json({ success: true, message: "更新成功" });
+    } catch (err) {
+      console.error("update profile error:", err);
+      res.status(500).json({ success: false, message: "服务器内部错误" });
+    }
+  },
+);
+
+// --- 上传头像（小程序 chooseAvatar 后调用，返回可访问的 URL）---
+app.post(
+  "/api/upload-avatar",
+  authenticateToken,
+  upload.single("file"),
+  (req: Request, res: Response) => {
+    const file = (req as Request & { file?: { filename: string } }).file;
+    if (!file) {
+      return res.status(400).json({ success: false, message: "请选择头像文件" });
+    }
+    const base = process.env.BASE_URL || `http://127.0.0.1:${process.env.PORT || 3001}`;
+    const url = `${base}/uploads/${file.filename}`;
+    res.json({ success: true, url });
+  },
+);
 
 app.get("/", (req: Request, res: Response) => {
   res.json({

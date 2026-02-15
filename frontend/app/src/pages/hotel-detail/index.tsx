@@ -8,31 +8,32 @@ import type { HotelDetail } from '../../types/hotel'
 
 import './index.css'
 
+const DEFAULT_HOTEL_ID = 1
+
 const HotelDetailPage: FC = () => {
   const router = useRouter()
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [detail, setDetail] = useState<HotelDetail | null>(null)
+  const [loadFailed, setLoadFailed] = useState(false)
 
   useEffect(() => {
-    const idParam = router.params.id as string | undefined
-    if (!idParam) {
-      Taro.showToast({ title: '缺少酒店 ID', icon: 'none' })
-      return
-    }
-
-    const id = Number(idParam)
-    if (Number.isNaN(id)) {
-      Taro.showToast({ title: '无效的酒店 ID', icon: 'none' })
+    const idParam = (router.params?.id as string) ?? ''
+    const id = idParam ? Number(idParam) : DEFAULT_HOTEL_ID
+    if (Number.isNaN(id) || id < 1) {
+      setLoading(false)
+      setLoadFailed(true)
       return
     }
 
     const load = async () => {
       try {
         setLoading(true)
+        setLoadFailed(false)
         const data = await fetchHotelDetail(id)
         setDetail(data)
       } catch (error) {
         console.error('加载酒店详情失败', error)
+        setLoadFailed(true)
         Taro.showToast({
           title: '暂时无法获取酒店详情',
           icon: 'none',
@@ -43,12 +44,26 @@ const HotelDetailPage: FC = () => {
     }
 
     load()
-  }, [router.params.id])
+  }, [router.params?.id])
 
-  if (loading || !detail) {
+  if (loading) {
     return (
       <View className='page hotel-detail-page'>
         <Text>正在加载酒店详情...</Text>
+      </View>
+    )
+  }
+
+  if (loadFailed || !detail) {
+    return (
+      <View className='page hotel-detail-page'>
+        <Text className='error-tip'>暂无酒店详情，请检查网络或从首页选择酒店</Text>
+        <Button
+          type='primary'
+          onClick={() => Taro.reLaunch({ url: '/pages/index/index' })}
+        >
+          去首页
+        </Button>
       </View>
     )
   }

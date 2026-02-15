@@ -1,0 +1,60 @@
+.register-page {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding: 48rpx 32rpx;
+  box-sizing: border-box;
+}
+
+.register-card {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 48rpx 40rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.06);
+}
+
+.register-title {
+  display: block;
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+  margin-bottom: 48rpx;
+}
+
+.form-item {
+  margin-bottom: 32rpx;
+}
+
+.form-label {
+  display: block;
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 12rpx;
+}
+
+.form-input {
+  width: 100%;
+  height: 80rpx;
+  padding: 0 24rpx;
+  font-size: 28rpx;
+  background: #f8f8f8;
+  border-radius: 12rpx;
+  box-sizing: border-box;
+}
+
+.submit-btn {
+  margin-top: 24rpx;
+  width: 100%;
+  border-radius: 999rpx;
+  font-size: 32rpx;
+}
+
+.footer-link {
+  margin-top: 32rpx;
+  text-align: center;
+}
+
+.link {
+  font-size: 28rpx;
+  color: #2d8cf0;
+}

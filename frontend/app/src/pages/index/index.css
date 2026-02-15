@@ -6,6 +6,16 @@
   box-sizing: border-box;
 }
 
+.index-user-bar {
+  text-align: right;
+  margin-bottom: 16rpx;
+}
+
+.index-user-link {
+  font-size: 28rpx;
+  color: #2d8cf0;
+}
+
 .banner {
   position: relative;
   margin-bottom: 32rpx;

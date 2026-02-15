@@ -2,7 +2,8 @@ import Taro from '@tarojs/taro'
 
 import type { Hotel, HotelDetail, PaginatedResponse } from '../types/hotel'
 
-const BASE_URL = 'http://localhost:3001/api'
+// 与 auth 保持一致，用 127.0.0.1 便于小程序模拟器访问本机后端
+const BASE_URL = 'http://127.0.0.1:3001/api'
 
 export interface HotelListParams {
   page?: number

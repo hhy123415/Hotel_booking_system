@@ -1,0 +1,92 @@
+.profile-edit-page {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding: 48rpx 32rpx;
+  box-sizing: border-box;
+}
+
+.profile-card {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 48rpx 40rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.06);
+}
+
+.profile-title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+  margin-bottom: 48rpx;
+}
+
+.avatar-row {
+  margin-bottom: 32rpx;
+}
+
+.avatar-row .form-label {
+  display: block;
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 12rpx;
+}
+
+.avatar-btn {
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+  display: block;
+}
+
+.avatar-btn::after {
+  border: none;
+}
+
+.avatar-img {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  background: #f0f0f0;
+}
+
+.avatar-placeholder {
+  display: block;
+  width: 160rpx;
+  height: 160rpx;
+  line-height: 160rpx;
+  text-align: center;
+  font-size: 26rpx;
+  color: #999;
+  background: #f0f0f0;
+  border-radius: 50%;
+}
+
+.form-item {
+  margin-bottom: 32rpx;
+}
+
+.form-label {
+  display: block;
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 12rpx;
+}
+
+.form-input {
+  width: 100%;
+  height: 80rpx;
+  padding: 0 24rpx;
+  font-size: 28rpx;
+  background: #f8f8f8;
+  border-radius: 12rpx;
+  box-sizing: border-box;
+}
+
+.submit-btn {
+  margin-top: 24rpx;
+  width: 100%;
+  border-radius: 999rpx;
+  font-size: 32rpx;
+}
