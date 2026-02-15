@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import api from "../api/axios";
 import { useAuth } from "../hooks/useAuth";
 import styles from "../css/AdmCheck.module.css";
-import type { ApplicationCheck } from "../../../../GlobalInterface";
+import type { ApplicationCheck } from "../../Interface";
 import dayjs from "dayjs";
+import Pagination from "../component/pagination";
 
 function Adm_req_check() {
   const [data, setData] = useState<ApplicationCheck[]>([]);
@@ -143,27 +144,11 @@ function Adm_req_check() {
             </table>
           </div>
 
-          <div className={styles.pagination}>
-            <button
-              className={styles.btn}
-              disabled={currentPage === 1}
-              onClick={() => handlePageChange(currentPage - 1)}
-            >
-              上一页
-            </button>
-
-            <span className={styles.pageInfo}>
-              第 <strong>{currentPage}</strong> 页 / 共 {totalPages} 页
-            </span>
-
-            <button
-              className={styles.btn}
-              disabled={currentPage === totalPages}
-              onClick={() => handlePageChange(currentPage + 1)}
-            >
-              下一页
-            </button>
-          </div>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
 
           {/* 弹窗 */}
           {isModalOpen && (

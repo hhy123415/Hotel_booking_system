@@ -1,107 +1,185 @@
 .container {
-  padding: 24px;
-  background-color: #ffffff;
-  min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 20px auto;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .title {
-  font-size: 24px;
-  font-weight: 600;
+  text-align: center;
   color: #333;
-  margin-bottom: 24px;
-  border-left: 4px solid #1890ff; /* 蓝色装饰条 */
-  padding-left: 12px;
+  margin-bottom: 20px;
+  font-size: 2em;
+}
+
+.loadingText {
+  text-align: center;
+  font-size: 1.2em;
+  color: #666;
+  padding: 20px;
+}
+
+.errorText {
+  text-align: center;
+  font-size: 1.2em;
+  color: #d9534f;
+  padding: 20px;
+  background-color: #f2dede;
+  border: 1px solid #ebccd1;
+  border-radius: 4px;
+  margin-bottom: 20px;
 }
 
 .tableWrapper {
-  width: 100%;
-  overflow-x: auto; /* 响应式：小屏幕出现滚动条 */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  border-radius: 8px;
+  overflow-x: auto; /* 保证表格在小屏幕上可滚动 */
+  margin-bottom: 20px;
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
+  margin-bottom: 20px;
   background-color: #fff;
-  text-align: left;
+  table-layout: fixed; /* 使列宽固定 */
 }
 
-.table thead tr {
-  background-color: #fafafa;
-  border-bottom: 2px solid #f0f0f0;
+.table th,
+.table td {
+  border: 1px solid #ddd;
+  padding: 12px 15px;
+  text-align: left;
+  vertical-align: middle;
+  word-wrap: break-word; /* 防止长单词撑开单元格 */
 }
 
 .table th {
-  padding: 16px;
-  font-weight: 500;
-  color: #5c5c5c;
-  white-space: nowrap;
+  background-color: #eef;
+  font-weight: bold;
+  color: #333;
 }
 
-.table td {
-  padding: 16px;
-  border-bottom: 1px solid #f0f0f0;
-  color: #666;
-  font-size: 14px;
+/* 为表头设置宽度，这些宽度将决定列的宽度 */
+.table th:nth-child(1) {
+  width: 5%;
+} /* ID */
+.table th:nth-child(2) {
+  width: 12%;
+} /* 中文名 */
+.table th:nth-child(3) {
+  width: 12%;
+} /* 英文名 */
+.table th:nth-child(4) {
+  width: 15%;
+} /* 地址 */
+.table th:nth-child(5) {
+  width: 8%;
+} /* 星级 */
+.table th:nth-child(6) {
+  width: 10%;
+} /* 运营周期 (可以根据实际内容调整) */
+.table th:nth-child(7) {
+  width: 18%;
+} /* 描述信息 (剩余空间分配) */
+.table th:nth-child(8) {
+  width: 8%;
+} /* 是否上线 */
+.table th:nth-child(9) {
+  width: 12%;
+} /* 操作 (需要容纳两个按钮) */
+
+.table tbody tr:nth-child(even) {
+  background-color: #f5f5f5;
 }
 
 .table tbody tr:hover {
-  background-color: #f5f7fa; /* 悬停高亮 */
-  transition: background-color 0.3s;
+  background-color: #e0e0e0;
 }
 
-/* 特殊列处理 */
 .starColumn {
-  color: #faad14; /* 星级颜色 */
-  font-weight: bold;
+  text-align: center;
 }
 
 .periodColumn {
-  font-family: monospace;
-  color: #888;
+  white-space: normal; /* 允许运营周期文本换行，如果宽度不够 */
 }
 
-/* 分页控制 */
-.pagination {
-  margin-top: 24px;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 12px;
+/* 编辑状态的输入框、下拉框和按钮也要注意其box-sizing，以确保不超出父元素宽度 */
+.editInput,
+.editSelect,
+.editTextArea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box; /* 确保 padding 和 border 不会增加元素总宽度 */
+  min-width: 0; /* 允许内容较少的输入框缩小 */
 }
 
-.pageInfo {
-  font-size: 14px;
-  color: #666;
+/* textarea 样式 */
+.editTextArea {
+  min-height: 60px; /* 最小高度，保证可以看到几行 */
+  resize: vertical; /* 允许用户垂直方向拖拽调整大小 */
+  overflow-y: auto; /* 内容超出最小高度时显示滚动条 */
+}
+
+/* 针对操作列的按钮，可以设置一个最小宽度并允许换行，以适应单元格 */
+.table td:nth-child(9) button {
+  white-space: nowrap; /* 按钮文字不换行 */
+  margin-bottom: 5px; /* 如果按钮需要垂直堆叠 */
+  display: block; /* 每个按钮独占一行 */
+  width: 100%; /* 让按钮去填满可用宽度 */
 }
 
 .btn {
-  padding: 6px 16px;
-  border: 1px solid #d9d9d9;
-  background-color: #fff;
-  color: #333;
-  border-radius: 4px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
   cursor: pointer;
-  transition: all 0.3s;
-}
-
-.btn:hover:not(:disabled) {
-  color: #40a9ff;
-  border-color: #40a9ff;
+  font-size: 1em;
+  transition: background-color 0.3s ease;
+  min-width: 80px; /* 统一按钮宽度 */
 }
 
 .btn:disabled {
-  background-color: #f5f5f5;
-  color: #bfbfbf;
+  background-color: #ccc;
   cursor: not-allowed;
-  border-color: #d9d9d9;
+  opacity: 0.7;
 }
 
-.loadingText {
-  text-align: center;
-  padding: 40px;
-  color: #1890ff;
-  font-weight: bold;
+/* 新增的按钮样式 */
+.editBtn {
+  background-color: #007bff;
+  color: white;
+}
+
+.editBtn:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+/* 调整按钮样式，让它们在固定宽度的列中更合理 */
+.saveBtn,
+.cancelBtn {
+  padding: 8px 10px; /* 调整内边距 */
+  font-size: 0.9em; /* 调整字体大小 */
+  margin-right: 0; /* 如果是 block 元素则不需要右边距 */
+}
+
+.saveBtn {
+  background-color: #28a745;
+  color: white;
+}
+
+.saveBtn:hover:not(:disabled) {
+  background-color: #218838;
+}
+
+.cancelBtn {
+  background-color: #dc3545;
+  color: white;
+}
+
+.cancelBtn:hover:not(:disabled) {
+  background-color: #c82333;
 }

@@ -18,11 +18,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     };
   });
 
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     // 页面刷新时，从服务器确认身份
     const checkAuthStatus = async () => {
       try {
         const res = await api.get("/me");
+        // console.log(res.data.user.user_id);
         if (res.data.success) {
           setAuth({
             isLoggedIn: true,
@@ -33,6 +36,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         }
       } catch (err) {
         console.log(err);
+        setAuth({
+          isLoggedIn: false,
+          user_id: "",
+          username: "",
+          isAdmin: false,
+        });
+      } finally {
+        setLoading(false);
       }
     };
     checkAuthStatus();
@@ -56,6 +67,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const value: AuthContextType = { auth, login, logout };
+
+  // 如果还在加载中，显示一个加载指示器
+  if (loading) {
+    return <div>Loading authentication...</div>; // 或者一个更复杂的加载动画
+  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

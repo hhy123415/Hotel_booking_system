@@ -6,17 +6,9 @@ import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import { authenticateToken, authenticateAdmin } from "./auth";
 import jwt from "jsonwebtoken";
+import type { HotelRow, UserRow } from "./Interface.ts";
 
 dotenv.config();
-
-// 定义用户在数据库中的结构
-interface UserRow {
-  user_id?: string;
-  user_name: string;
-  password: string;
-  email: string;
-  is_admin: boolean;
-}
 
 // 连接数据库配置
 const pool = new Pool({
@@ -152,7 +144,7 @@ app.post("/api/login", async (req: Request, res: Response) => {
     // 登录成功,生成token
     const token = jwt.sign(
       {
-        id: user.user_id,
+        user_id: user.user_id,
         username: user.user_name,
         isAdmin: user.is_admin,
       },
@@ -187,13 +179,13 @@ app.post("/api/login", async (req: Request, res: Response) => {
 });
 
 // --- 获取当前用户信息接口 (AuthProvider 初始化时调用) ---
-app.get("/api/me", authenticateToken, (req: any, res: Response) => {
+app.get("/api/me", authenticateToken, async (req: Request, res: Response) => {
   res.json({
     success: true,
     user: {
-      user_id: req.user.user_id,
-      username: req.user.username,
-      isAdmin: req.user.isAdmin,
+      user_id: req.user?.user_id,
+      username: req.user?.username,
+      isAdmin: req.user?.isAdmin,
     },
   });
 });
@@ -229,14 +221,14 @@ app.get(
       // 分页查询数据
       // 注意：这里使用了 order by 以保证分页顺序稳定
       const queryText = `
-        SELECT 
-          name_zh, name_en, address, star_rating, 
-          operating_period, description, created_at, updated_at 
-        FROM hotels 
-        ORDER BY created_at DESC 
+        SELECT * FROM hotels 
+        ORDER BY id 
         LIMIT $1 OFFSET $2
       `;
-      const dataResult = await pool.query(queryText, [pageSize, offset]);
+      const dataResult: QueryResult<HotelRow> = await pool.query(queryText, [
+        pageSize,
+        offset,
+      ]);
 
       // 返回包含分页信息的数据
       res.json({
@@ -252,6 +244,98 @@ app.get(
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: "服务器内部错误" });
+    }
+  },
+);
+
+// 管理员更新数据库信息
+app.put(
+  "/api/admin_query/:id", // :id 是动态参数
+  authenticateToken,
+  authenticateAdmin,
+  async (req: Request, res: Response) => {
+    const hotelId = parseInt(req.params.id as string, 10); // 从URL获取酒店ID
+    const {
+      name_zh,
+      name_en,
+      address,
+      star_rating,
+      operating_period,
+      description,
+      active,
+    } = req.body; // 从请求体获取更新数据
+
+    // 1. 数据验证
+    if (isNaN(hotelId) || hotelId <= 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "无效的酒店ID。" });
+    }
+    if (!name_zh || !name_en || !address || !operating_period) {
+      return res.status(400).json({
+        success: false,
+        message: "中文名、英文名、地址、运营周期为必填项。",
+      });
+    }
+    if (typeof star_rating !== "number" || star_rating < 1 || star_rating > 5) {
+      return res
+        .status(400)
+        .json({ success: false, message: "星级必须是1到5之间的整数。" });
+    }
+
+    try {
+      // 2. 执行数据库更新
+      const updateQuery = `
+        UPDATE hotels
+        SET 
+          name_zh = $1,
+          name_en = $2,
+          address = $3,
+          star_rating = $4,
+          operating_period = $5,
+          description = $6,
+          updated_at = CURRENT_TIMESTAMP,
+          active = $7
+        WHERE id = $8
+        RETURNING *; -- 返回更新后的记录
+      `;
+      const result: QueryResult<HotelRow> = await pool.query(updateQuery, [
+        name_zh,
+        name_en,
+        address,
+        star_rating,
+        operating_period,
+        description || null, // description 可能为空
+        active,
+        hotelId,
+      ]);
+
+      // 3. 检查更新结果
+      if (result.rows.length === 0) {
+        return res
+          .status(404)
+          .json({ success: false, message: "酒店未找到或更新失败。" });
+      }
+
+      // 4. 返回更新后的酒店信息
+      res.status(200).json({
+        success: true,
+        message: "酒店信息更新成功。",
+        data: result.rows[0], // 返回更新后的酒店数据
+      });
+    } catch (err: any) {
+      console.error(`更新酒店ID ${hotelId} 失败:`, err);
+      // 根据错误类型返回更详细的错误信息，例如数据库约束错误
+      if (err.code === "23505") {
+        // PostgreSQL unique violation code
+        return res
+          .status(409)
+          .json({ success: false, message: "存在重复的酒店名称或标识符。" });
+      }
+      res.status(500).json({
+        success: false,
+        message: "服务器内部错误，无法更新酒店信息。",
+      });
     }
   },
 );
@@ -379,6 +463,8 @@ app.post(
   },
 );
 
+//---商户申请新的酒店---
+
 app.post(
   "/api/new_request",
   authenticateToken,
@@ -391,8 +477,9 @@ app.post(
         star_rating,
         operating_period,
         description,
-        user_id,
       } = req.body;
+
+      const user_id = req.user?.user_id;
 
       // 基础后台校验
       if (
@@ -450,19 +537,13 @@ app.post(
   },
 );
 
-//获取自己的申请记录
+//---商户查看自己的申请记录---
 app.get("/api/my_req", authenticateToken, async (req: Request, res) => {
   try {
     // 获取分页参数，设置默认值
     const page = parseInt(String(req.query.page)) || 1;
     const pageSize = parseInt(String(req.query.pageSize)) || 10;
-    const user_id = req.user?.id;
-    console.log(user_id);
-    if (!user_id) {
-      // 在 authenticateToken 成功执行的情况下，这通常不应该发生，
-      // 但作为防御性编程，仍然可以增加检查
-      return res.status(401).json({ error: "用户ID未提供或认证失败" });
-    }
+    const user_id = req.user?.user_id;
     const offset = (page - 1) * pageSize;
 
     // 查询待处理总条数（用于计算分页）
@@ -478,7 +559,7 @@ app.get("/api/my_req", authenticateToken, async (req: Request, res) => {
     const queryText = `
         SELECT 
           id, name_zh, name_en, address, star_rating, 
-          operating_period, description, status
+          operating_period, description, status, admin_remark
         FROM hotel_applications WHERE user_id = $1
         ORDER BY created_at DESC 
         LIMIT $2 OFFSET $3
