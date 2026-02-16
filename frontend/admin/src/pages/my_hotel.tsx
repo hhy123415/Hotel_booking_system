@@ -61,8 +61,6 @@ function My_hotel() {
                   <th>星级</th>
                   <th>运营周期</th>
                   <th>描述信息</th>
-                  <th>审核状态</th>
-                  <th>管理员备注</th>
                 </tr>
               </thead>
               <tbody>
@@ -78,14 +76,6 @@ function My_hotel() {
                       {hotel.operating_period}
                     </td>
                     <td>{hotel.description}</td>
-                    <td>
-                      {hotel.status === "pending"
-                        ? "审核中"
-                        : hotel.status === "approved"
-                          ? "通过"
-                          : "拒绝"}
-                    </td>
-                    <td>{hotel.admin_remark}</td>
                   </tr>
                 ))}
               </tbody>
