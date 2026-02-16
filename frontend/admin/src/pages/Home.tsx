@@ -62,6 +62,13 @@ function Home() {
                   <span className={styles.icon}>⏳</span>
                   我的申请
                 </Link>
+                <Link
+                  to="/my-hotel"
+                  className={`${styles.menuBtn} ${styles.userTheme}`}
+                >
+                  <span className={styles.icon}>⚙️</span>
+                  管理我的酒店
+                </Link>
               </>
             )}
           </div>
