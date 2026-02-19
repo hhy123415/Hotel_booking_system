@@ -374,7 +374,7 @@ app.get("/", (req: Request, res: Response) => {
   });
 });
 
-//管理员获取酒店信息
+//---管理员获取酒店信息---
 app.get(
   "/api/admin_query",
   authenticateToken,
@@ -581,29 +581,30 @@ app.post(
 
       if (action === "approve") {
         // 获取申请详情
-        const appRes = await client.query(
+        const result = await client.query(
           "SELECT * FROM hotel_applications WHERE id = $1 AND status = 'pending' FOR UPDATE",
           [id],
         );
 
-        if (appRes.rowCount === 0) {
+        if (result.rowCount === 0) {
           throw new Error("申请不存在或已被处理");
         }
 
-        const app = appRes.rows[0];
+        const res = result.rows[0];
 
         // 插入到 hotels 表
         const insertHotelQuery = `
-          INSERT INTO hotels (name_zh, name_en, address, star_rating, operating_period, description, active)
-          VALUES ($1, $2, $3, $4, $5, $6, true)
+          INSERT INTO hotels (name_zh, name_en, address, star_rating, operating_period, description, active, user_id)
+          VALUES ($1, $2, $3, $4, $5, $6, true, $7)
         `;
         await client.query(insertHotelQuery, [
-          app.name_zh,
-          app.name_en,
-          app.address,
-          app.star_rating,
-          app.operating_period,
-          app.description,
+          res.name_zh,
+          res.name_en,
+          res.address,
+          res.star_rating,
+          res.operating_period,
+          res.description,
+          res.user_id,
         ]);
 
         // 更新申请表状态
@@ -636,7 +637,6 @@ app.post(
 );
 
 //---商户申请新的酒店---
-
 app.post(
   "/api/new_request",
   authenticateToken,
@@ -721,6 +721,52 @@ app.get("/api/my_req", authenticateToken, async (req: Request, res) => {
     // 查询待处理总条数（用于计算分页）
     const countResult = await pool.query(
       "SELECT COUNT(*) FROM hotel_applications WHERE user_id = $1",
+      [user_id],
+    );
+
+    const totalCount = parseInt(countResult.rows[0].count);
+
+    // 分页查询数据
+    // 注意：这里使用了 order by 以保证分页顺序稳定
+    const queryText = `
+        SELECT 
+          id, name_zh, name_en, address, star_rating, 
+          operating_period, description, status, admin_remark
+        FROM hotel_applications WHERE user_id = $1
+        ORDER BY created_at DESC 
+        LIMIT $2 OFFSET $3
+      `;
+    const dataResult = await pool.query(queryText, [user_id, pageSize, offset]);
+
+    // 返回包含分页信息的数据
+    res.json({
+      success: true,
+      data: dataResult.rows,
+      pagination: {
+        total: totalCount,
+        page: page,
+        pageSize: pageSize,
+        totalPages: Math.ceil(totalCount / pageSize),
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "服务器内部错误" });
+  }
+});
+
+//---商户获取自己已经审核通过的酒店信息---
+app.get("/api/my_hotel", authenticateToken, async (req: Request, res) => {
+  try {
+    // 获取分页参数，设置默认值
+    const page = parseInt(String(req.query.page)) || 1;
+    const pageSize = parseInt(String(req.query.pageSize)) || 10;
+    const user_id = req.user?.user_id;
+    const offset = (page - 1) * pageSize;
+
+    // 查询待处理总条数（用于计算分页）
+    const countResult = await pool.query(
+      "SELECT COUNT(*) FROM hotels WHERE user_id = $1",
       [user_id],
     );
 

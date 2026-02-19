@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:3001/api", //后期需要根据服务器ip地址进行调整，不能使用localhost，否则无法正常访问
+  baseURL: "http://47.98.251.110:3001/api", 
   withCredentials: true, // 必须设置，否则 Cookie 不会发送
   timeout: 5000,
 });
