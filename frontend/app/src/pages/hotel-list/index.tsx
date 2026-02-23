@@ -15,7 +15,10 @@ const HotelListPage: FC = () => {
   const [keyword, setKeyword] = useState<string>('')
 
   useEffect(() => {
-    const initialKeyword = (router.params.keyword as string) || ''
+    const rawKeyword = (router.params.keyword as string) || ''
+    const initialKeyword = rawKeyword ? decodeURIComponent(rawKeyword) : ''
+    const starParam = router.params.star ? Number(router.params.star) : undefined
+    const checkIn = (router.params.checkIn as string) || ''
     setKeyword(initialKeyword)
 
     const load = async () => {
@@ -25,8 +28,12 @@ const HotelListPage: FC = () => {
           page: 1,
           pageSize: 20,
           keyword: initialKeyword,
+          star: starParam && starParam > 0 ? starParam : undefined,
+          checkIn: checkIn || undefined,
         })
-        setHotels(res.data)
+
+        // 直接使用后端返回的数据，不再做前端兜底过滤
+        setHotels(res.data || [])
       } catch (error) {
         console.error('加载酒店列表失败', error)
         Taro.showToast({
@@ -39,7 +46,7 @@ const HotelListPage: FC = () => {
     }
 
     load()
-  }, [router.params.keyword])
+  }, [router.params.keyword, router.params.star, router.params.checkIn])
 
   const handleItemClick = (id: number) => {
     Taro.navigateTo({

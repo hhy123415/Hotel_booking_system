@@ -231,6 +231,125 @@ app.post("/api/logout", (req: Request, res: Response) => {
   res.json({ success: true, message: "登出成功" });
 });
 
+// ---------- 小程序用：公开酒店接口（无需登录） ----------
+
+// 酒店列表（分页 + 关键字 + 星级 + 入住日期）
+app.get("/api/hotels", async (req: Request, res: Response) => {
+  try {
+    const page = Math.max(1, parseInt(String(req.query.page)) || 1);
+    const pageSize = Math.min(50, Math.max(1, parseInt(String(req.query.pageSize)) || 10));
+    const keyword = String(req.query.keyword || "").trim();
+    const star = parseInt(String(req.query.star || ""), 10);
+    const checkIn = String(req.query.checkIn || "").trim();
+    const offset = (page - 1) * pageSize;
+
+    let countSql = "SELECT COUNT(*) FROM hotels WHERE active IS NOT FALSE";
+    let listSql = `
+      SELECT id, name_zh, name_en, address, star_rating,
+             operating_period, description, created_at, updated_at, active, user_id
+      FROM hotels
+      WHERE active IS NOT FALSE
+    `;
+    const countParams: unknown[] = [];
+    const listParams: unknown[] = [];
+
+    // 关键字：酒店名 / 英文名 / 地址 模糊匹配
+    if (keyword) {
+      const like = `%${keyword}%`;
+      const idx = countParams.length + 1;
+      countSql += ` AND (name_zh ILIKE $${idx} OR name_en ILIKE $${idx} OR address ILIKE $${idx})`;
+      listSql += ` AND (name_zh ILIKE $${idx} OR name_en ILIKE $${idx} OR address ILIKE $${idx})`;
+      countParams.push(like);
+      listParams.push(like);
+    }
+
+    // 星级：star_rating >= 选择的星级（例如 3 星及以上）
+    if (!Number.isNaN(star) && star > 0) {
+      const idx = countParams.length + 1;
+      countSql += ` AND star_rating >= $${idx}`;
+      listSql += ` AND star_rating >= $${idx}`;
+      countParams.push(star);
+      listParams.push(star);
+    }
+
+    // 入住日期：operating_period 包含该日期
+    if (checkIn) {
+      const idx = countParams.length + 1;
+      countSql += ` AND operating_period @> $${idx}::date`;
+      listSql += ` AND operating_period @> $${idx}::date`;
+      countParams.push(checkIn);
+      listParams.push(checkIn);
+    }
+
+    const countResult = await pool.query(countSql, countParams);
+    const total = parseInt(countResult.rows[0].count, 10);
+
+    const limitIdx = listParams.length + 1;
+    const offsetIdx = listParams.length + 2;
+    listParams.push(pageSize, offset);
+    listSql += ` ORDER BY id LIMIT $${limitIdx} OFFSET $${offsetIdx}`;
+
+    const dataResult: QueryResult<HotelRow> = await pool.query(listSql, listParams);
+
+    res.json({
+      success: true,
+      data: dataResult.rows,
+      pagination: {
+        total,
+        page,
+        pageSize,
+        totalPages: Math.ceil(total / pageSize),
+      },
+    });
+  } catch (err) {
+    console.error("GET /api/hotels error:", err);
+    res.status(500).json({ success: false, message: "服务器内部错误" });
+  }
+});
+
+// 酒店详情（含房型）
+app.get("/api/hotels/:id", async (req: Request, res: Response) => {
+  try {
+    const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const id = parseInt(idParam ?? "", 10);
+    if (Number.isNaN(id) || id < 1) {
+      return res.status(400).json({ success: false, message: "无效的酒店 ID" });
+    }
+
+    const hotelResult: QueryResult<HotelRow> = await pool.query(
+      "SELECT id, name_zh, name_en, address, star_rating, operating_period, description, created_at, updated_at, active, user_id FROM hotels WHERE id = $1 AND (active IS NOT FALSE)",
+      [id],
+    );
+    if (hotelResult.rows.length === 0) {
+      return res.status(404).json({ success: false, message: "酒店不存在或已下架" });
+    }
+
+    const roomResult = await pool.query(
+      "SELECT id, hotel_id, name, base_price, capacity, total_inventory FROM room_types WHERE hotel_id = $1 ORDER BY id",
+      [id],
+    );
+    const roomTypes = roomResult.rows.map((row: Record<string, unknown>) => ({
+      id: row.id,
+      hotel_id: row.hotel_id,
+      name: row.name,
+      base_price: String(row.base_price ?? "0"),
+      capacity: row.capacity ?? null,
+      total_inventory: row.total_inventory ?? null,
+    }));
+
+    res.json({
+      success: true,
+      data: {
+        hotel: hotelResult.rows[0],
+        roomTypes,
+      },
+    });
+  } catch (err) {
+    console.error("GET /api/hotels/:id error:", err);
+    res.status(500).json({ success: false, message: "服务器内部错误" });
+  }
+});
+
 // --- 微信小程序登录（code 换 openid，自动注册/登录）---
 const WECHAT_APPID = process.env.WECHAT_APPID || "";
 const WECHAT_SECRET = process.env.WECHAT_SECRET || "";

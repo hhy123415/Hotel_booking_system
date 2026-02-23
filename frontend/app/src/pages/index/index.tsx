@@ -61,8 +61,9 @@ const Index: FC = () => {
     if (priceFilter && priceFilter !== '不限') params.price = priceFilter
     if (selectedTags.length > 0) params.tags = selectedTags.join(',')
 
+    // 这里不手动 encode，交给 Taro/微信处理，避免在列表页看到一串 %E5%... 的编码
     const queryString = Object.keys(params)
-      .map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+      .map((key) => `${key}=${params[key]}`)
       .join('&')
 
     const url = queryString

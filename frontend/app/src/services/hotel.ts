@@ -9,21 +9,30 @@ export interface HotelListParams {
   page?: number
   pageSize?: number
   keyword?: string
+  star?: number
+  checkIn?: string
 }
 
 export async function fetchHotelList(
   params: HotelListParams = {},
 ): Promise<PaginatedResponse<Hotel>> {
-  const { page = 1, pageSize = 10, keyword = '' } = params
+  const { page = 1, pageSize = 10, keyword = '', star, checkIn } = params
+
+  // 只在有值时再把参数加到请求里，避免出现 star=undefined、checkIn=undefined
+  const data: Record<string, unknown> = {
+    page,
+    pageSize,
+  }
+
+  const kw = keyword.trim()
+  if (kw) data.keyword = kw
+  if (typeof star === 'number' && star > 0) data.star = star
+  if (checkIn) data.checkIn = checkIn
 
   const res = await Taro.request<PaginatedResponse<Hotel>>({
     url: `${BASE_URL}/hotels`,
     method: 'GET',
-    data: {
-      page,
-      pageSize,
-      keyword: keyword.trim() || undefined,
-    },
+    data,
   })
 
   return res.data
