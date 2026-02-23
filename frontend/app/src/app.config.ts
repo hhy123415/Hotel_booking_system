@@ -6,7 +6,9 @@ export default defineAppConfig({
     'pages/login/index',
     'pages/register/index',
     'pages/user-center/index',
-    'pages/profile-edit/index'
+    'pages/profile-edit/index',
+    'pages/order-create/index',
+    'pages/order-list/index'
   ],
   window: {
     backgroundTextStyle: 'light',

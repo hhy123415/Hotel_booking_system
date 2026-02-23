@@ -755,49 +755,162 @@ app.get("/api/my_req", authenticateToken, async (req: Request, res) => {
   }
 });
 
-//---商户获取自己已经审核通过的酒店信息---
+//---商户获取自己已审核通过的酒店（来自 hotels 表）---
 app.get("/api/my_hotel", authenticateToken, async (req: Request, res) => {
   try {
-    // 获取分页参数，设置默认值
     const page = parseInt(String(req.query.page)) || 1;
     const pageSize = parseInt(String(req.query.pageSize)) || 10;
     const user_id = req.user?.user_id;
     const offset = (page - 1) * pageSize;
 
-    // 查询待处理总条数（用于计算分页）
     const countResult = await pool.query(
       "SELECT COUNT(*) FROM hotels WHERE user_id = $1",
       [user_id],
     );
+    const totalCount = parseInt(countResult.rows[0].count, 10);
 
-    const totalCount = parseInt(countResult.rows[0].count);
-
-    // 分页查询数据
-    // 注意：这里使用了 order by 以保证分页顺序稳定
     const queryText = `
-        SELECT 
-          id, name_zh, name_en, address, star_rating, 
-          operating_period, description, status, admin_remark
-        FROM hotel_applications WHERE user_id = $1
-        ORDER BY created_at DESC 
-        LIMIT $2 OFFSET $3
-      `;
+      SELECT id, name_zh, name_en, address, star_rating,
+             operating_period, description, created_at, updated_at, active, user_id
+      FROM hotels
+      WHERE user_id = $1
+      ORDER BY id
+      LIMIT $2 OFFSET $3
+    `;
     const dataResult = await pool.query(queryText, [user_id, pageSize, offset]);
 
-    // 返回包含分页信息的数据
     res.json({
       success: true,
       data: dataResult.rows,
       pagination: {
         total: totalCount,
-        page: page,
-        pageSize: pageSize,
+        page,
+        pageSize,
         totalPages: Math.ceil(totalCount / pageSize),
       },
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "服务器内部错误" });
+  }
+});
+
+// --- 预订订单：创建订单（小程序用户下单）---
+app.post(
+  "/api/orders",
+  authenticateToken,
+  async (req: Request, res: Response) => {
+    const user_id = req.user?.user_id;
+    if (!user_id) {
+      return res.status(401).json({ success: false, message: "请先登录" });
+    }
+    const { hotel_id, room_type_id, check_in_date, check_out_date, num_rooms } = req.body as {
+      hotel_id?: number;
+      room_type_id?: number;
+      check_in_date?: string;
+      check_out_date?: string;
+      num_rooms?: number;
+    };
+    if (
+      hotel_id == null ||
+      room_type_id == null ||
+      !check_in_date ||
+      !check_out_date ||
+      !num_rooms ||
+      num_rooms < 1
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "缺少 hotel_id、room_type_id、check_in_date、check_out_date 或 num_rooms（至少 1）",
+      });
+    }
+    const checkIn = new Date(check_in_date);
+    const checkOut = new Date(check_out_date);
+    if (isNaN(checkIn.getTime()) || isNaN(checkOut.getTime()) || checkOut <= checkIn) {
+      return res.status(400).json({
+        success: false,
+        message: "入住/离店日期无效或离店需晚于入住",
+      });
+    }
+    try {
+      const roomRow = await pool.query(
+        "SELECT id, hotel_id, base_price FROM room_types WHERE id = $1 AND hotel_id = $2",
+        [room_type_id, hotel_id],
+      );
+      if (roomRow.rows.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "房型不存在或不属于该酒店",
+        });
+      }
+      const basePrice = parseFloat(roomRow.rows[0].base_price);
+      const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (24 * 60 * 60 * 1000));
+      const total_price = Math.round(basePrice * num_rooms * nights * 100) / 100;
+
+      await pool.query(
+        `INSERT INTO orders (user_id, hotel_id, room_type_id, check_in_date, check_out_date, num_rooms, total_price, status)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending_payment')`,
+        [user_id, hotel_id, room_type_id, check_in_date, check_out_date, num_rooms, total_price],
+      );
+      const created = await pool.query(
+        "SELECT id, hotel_id, room_type_id, check_in_date, check_out_date, num_rooms, total_price, status, created_at FROM orders WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1",
+        [user_id],
+      );
+      res.status(201).json({
+        success: true,
+        message: "订单创建成功，请尽快支付",
+        data: created.rows[0],
+      });
+    } catch (err) {
+      console.error("create order error:", err);
+      res.status(500).json({ success: false, message: "服务器内部错误" });
+    }
+  },
+);
+
+// --- 我的订单列表（分页）---
+app.get("/api/my_orders", authenticateToken, async (req: Request, res: Response) => {
+  const user_id = req.user?.user_id;
+  if (!user_id) {
+    return res.status(401).json({ success: false, message: "请先登录" });
+  }
+  try {
+    const page = Math.max(1, parseInt(String(req.query.page)) || 1);
+    const pageSize = Math.min(50, Math.max(1, parseInt(String(req.query.pageSize)) || 10));
+    const offset = (page - 1) * pageSize;
+
+    const countResult = await pool.query("SELECT COUNT(*) FROM orders WHERE user_id = $1", [
+      user_id,
+    ]);
+    const total = parseInt(countResult.rows[0].count, 10);
+
+    const rows = await pool.query(
+      `SELECT o.id, o.hotel_id, o.room_type_id, o.check_in_date, o.check_out_date,
+              o.num_rooms, o.total_price, o.status, o.created_at,
+              h.name_zh AS hotel_name_zh, h.name_en AS hotel_name_en,
+              r.name AS room_type_name, r.base_price
+       FROM orders o
+       JOIN hotels h ON h.id = o.hotel_id
+       JOIN room_types r ON r.id = o.room_type_id
+       WHERE o.user_id = $1
+       ORDER BY o.created_at DESC
+       LIMIT $2 OFFSET $3`,
+      [user_id, pageSize, offset],
+    );
+
+    res.json({
+      success: true,
+      data: rows.rows,
+      pagination: {
+        total,
+        page,
+        pageSize,
+        totalPages: Math.ceil(total / pageSize),
+      },
+    });
+  } catch (err) {
+    console.error("my_orders error:", err);
+    res.status(500).json({ success: false, message: "服务器内部错误" });
   }
 });
 

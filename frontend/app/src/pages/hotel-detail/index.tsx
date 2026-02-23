@@ -112,9 +112,8 @@ const HotelDetailPage: FC = () => {
           className='reserve-button'
           type='primary'
           onClick={() =>
-            Taro.showToast({
-              title: '预订流程待接入，当前为演示页面',
-              icon: 'none',
+            Taro.navigateTo({
+              url: `/pages/order-create/index?hotelId=${hotel.id}`,
             })
           }
         >

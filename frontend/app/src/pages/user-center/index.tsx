@@ -66,6 +66,13 @@ const UserCenterPage: FC = () => {
         <Text className='user-edit-link' onClick={goProfileEdit}>
           编辑头像与昵称
         </Text>
+        <Text
+          className='user-edit-link'
+          style={{ marginTop: '16rpx' }}
+          onClick={() => Taro.navigateTo({ url: '/pages/order-list/index' })}
+        >
+          我的订单
+        </Text>
       </View>
       <Button className='logout-btn' type='default' onClick={handleLogout}>
         退出登录
