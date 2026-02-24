@@ -241,12 +241,24 @@ app.get("/api/hotels", async (req: Request, res: Response) => {
     const keyword = String(req.query.keyword || "").trim();
     const star = parseInt(String(req.query.star || ""), 10);
     const checkIn = String(req.query.checkIn || "").trim();
+    const minPrice = parseFloat(String(req.query.minPrice || ""));
+    const maxPrice = parseFloat(String(req.query.maxPrice || ""));
     const offset = (page - 1) * pageSize;
 
     let countSql = "SELECT COUNT(*) FROM hotels WHERE active IS NOT FALSE";
     let listSql = `
-      SELECT id, name_zh, name_en, address, star_rating,
-             operating_period, description, created_at, updated_at, active, user_id
+      SELECT id,
+             name_zh,
+             name_en,
+             address,
+             star_rating,
+             image_url,
+             operating_period,
+             description,
+             created_at,
+             updated_at,
+             active,
+             user_id
       FROM hotels
       WHERE active IS NOT FALSE
     `;
@@ -279,6 +291,30 @@ app.get("/api/hotels", async (req: Request, res: Response) => {
       listSql += ` AND operating_period @> $${idx}::date`;
       countParams.push(checkIn);
       listParams.push(checkIn);
+    }
+
+    // 价格筛选：基于房型 room_types.base_price
+    // 只要有任意一个房型价格落在区间内，该酒店就会被筛选出来
+    if (!Number.isNaN(minPrice) || !Number.isNaN(maxPrice)) {
+      let priceCond = " EXISTS (SELECT 1 FROM room_types rt WHERE rt.hotel_id = hotels.id";
+
+      if (!Number.isNaN(minPrice)) {
+        const idx = countParams.length + 1;
+        priceCond += ` AND rt.base_price >= $${idx}`;
+        countParams.push(minPrice);
+        listParams.push(minPrice);
+      }
+
+      if (!Number.isNaN(maxPrice)) {
+        const idx = countParams.length + 1;
+        priceCond += ` AND rt.base_price <= $${idx}`;
+        countParams.push(maxPrice);
+        listParams.push(maxPrice);
+      }
+
+      priceCond += ")";
+      countSql += ` AND${priceCond}`;
+      listSql += ` AND${priceCond}`;
     }
 
     const countResult = await pool.query(countSql, countParams);
@@ -317,7 +353,7 @@ app.get("/api/hotels/:id", async (req: Request, res: Response) => {
     }
 
     const hotelResult: QueryResult<HotelRow> = await pool.query(
-      "SELECT id, name_zh, name_en, address, star_rating, operating_period, description, created_at, updated_at, active, user_id FROM hotels WHERE id = $1 AND (active IS NOT FALSE)",
+      "SELECT id, name_zh, name_en, address, star_rating, image_url, operating_period, description, created_at, updated_at, active, user_id FROM hotels WHERE id = $1 AND (active IS NOT FALSE)",
       [id],
     );
     if (hotelResult.rows.length === 0) {

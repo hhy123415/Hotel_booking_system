@@ -17,6 +17,7 @@ const OrderCreatePage: FC = () => {
   const [checkInDate, setCheckInDate] = useState('')
   const [checkOutDate, setCheckOutDate] = useState('')
   const [numRooms, setNumRooms] = useState(1)
+  const [guestCount, setGuestCount] = useState(2)
 
   const hotelId = Number(router.params?.hotelId || 0)
 
@@ -26,6 +27,14 @@ const OrderCreatePage: FC = () => {
       setLoading(false)
       return
     }
+    // 从路由参数预填入住 / 离店日期和入住人数（如果有）
+    const rawCheckIn = (router.params?.checkIn as string) || ''
+    const rawCheckOut = (router.params?.checkOut as string) || ''
+    const rawGuest = Number(router.params?.guestCount || 0)
+    if (rawCheckIn) setCheckInDate(rawCheckIn)
+    if (rawCheckOut) setCheckOutDate(rawCheckOut)
+    if (!Number.isNaN(rawGuest) && rawGuest > 0) setGuestCount(rawGuest)
+
     const load = async () => {
       try {
         const data = await fetchHotelDetail(hotelId)
@@ -151,6 +160,27 @@ const OrderCreatePage: FC = () => {
               className='num-btn'
               size='mini'
               onClick={() => setNumRooms((n) => n + 1)}
+            >
+              +
+            </Button>
+          </View>
+        </View>
+
+        <View className='form-block'>
+          <Text className='form-label'>入住人数</Text>
+          <View className='num-rooms-row'>
+            <Button
+              className='num-btn'
+              size='mini'
+              onClick={() => setGuestCount((n) => Math.max(1, n - 1))}
+            >
+              -
+            </Button>
+            <Text className='num-rooms-value'>{guestCount}</Text>
+            <Button
+              className='num-btn'
+              size='mini'
+              onClick={() => setGuestCount((n) => Math.min(6, n + 1))}
             >
               +
             </Button>

@@ -13,6 +13,8 @@ export interface Hotel {
   name_en: string;
   address: string;
   star_rating: number | null;
+  // 酒店封面图片相对路径，如 /uploads/xxx.jpg
+  image_url?: string | null;
   operating_period: unknown;
   description: string | null;
   created_at: string;

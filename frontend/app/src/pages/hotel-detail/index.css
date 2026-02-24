@@ -1,47 +1,239 @@
 .hotel-detail-page {
   min-height: 100vh;
   background-color: #f5f7fa;
-  padding: 24rpx 24rpx 120rpx;
+  padding: 0 0 120rpx;
   box-sizing: border-box;
 }
 
-.hotel-header-card {
+/* 顶部导航 */
+.detail-nav {
+  height: 88rpx;
+  padding: 0 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.35), transparent);
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 10;
+}
+
+.detail-nav-back {
+  display: flex;
+  align-items: center;
+  color: #ffffff;
+}
+
+.detail-nav-back-icon {
+  font-size: 40rpx;
+  margin-right: 8rpx;
+}
+
+.detail-nav-back-text {
+  font-size: 26rpx;
+}
+
+.detail-nav-title {
+  max-width: 360rpx;
+  font-size: 28rpx;
+  color: #ffffff;
+  text-align: right;
+}
+
+/* 顶部大图区域 */
+.detail-banner {
+  height: 320rpx;
+  background-image: linear-gradient(135deg, #60a5fa, #2563eb);
+  border-bottom-left-radius: 32rpx;
+  border-bottom-right-radius: 32rpx;
+  overflow: hidden;
+  position: relative;
+}
+
+.detail-banner-img {
+  width: 100%;
+  height: 100%;
+}
+
+.detail-banner-overlay {
+  position: absolute;
+  left: 24rpx;
+  right: 24rpx;
+  bottom: 32rpx;
+  color: #ffffff;
+}
+
+.detail-hotel-name {
+  font-size: 34rpx;
+  font-weight: 600;
+}
+
+.detail-hotel-star {
+  margin-top: 6rpx;
+  font-size: 24rpx;
+}
+
+.detail-hotel-address {
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  opacity: 0.9;
+}
+
+/* 基础信息卡片 */
+.detail-base-card {
+  margin: -12rpx 24rpx 16rpx;
   background-color: #ffffff;
   border-radius: 24rpx;
-  padding: 28rpx 24rpx 32rpx;
+  padding: 20rpx 24rpx 24rpx;
   box-shadow: 0 8rpx 24rpx rgba(15, 23, 42, 0.06);
-  margin-bottom: 24rpx;
 }
 
-.hotel-name-zh {
-  font-size: 36rpx;
+.detail-tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 16rpx;
+}
+
+.detail-tag {
+  padding: 6rpx 18rpx;
+  border-radius: 999rpx;
+  background-color: #eff6ff;
+  color: #2563eb;
+  font-size: 22rpx;
+  margin-right: 12rpx;
+  margin-bottom: 8rpx;
+}
+
+.detail-score-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.detail-score-main {
+  display: flex;
+  align-items: baseline;
+}
+
+.detail-score-number {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #10b981;
+}
+
+.detail-score-text {
+  font-size: 22rpx;
+  color: #10b981;
+  margin-left: 4rpx;
+}
+
+.detail-score-sub {
+  font-size: 22rpx;
+  color: #6b7280;
+}
+
+/* 日期 + 人数横条 */
+.detail-date-bar {
+  margin: 0 24rpx 16rpx;
+  background-color: #ffffff;
+  border-radius: 20rpx;
+  padding: 18rpx 20rpx;
+  display: flex;
+  justify-content: space-between;
+  box-shadow: 0 4rpx 14rpx rgba(15, 23, 42, 0.04);
+}
+
+.detail-date-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-date-row {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 4rpx;
+}
+
+.detail-date-label {
+  font-size: 22rpx;
+  color: #6b7280;
+  margin-right: 8rpx;
+}
+
+.detail-date-value {
+  font-size: 26rpx;
+  color: #111827;
+}
+
+.detail-date-right {
+  align-items: flex-end;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.detail-date-night {
+  font-size: 26rpx;
+  color: #111827;
   font-weight: 600;
-  color: #1f2933;
 }
 
-.hotel-name-en {
+.detail-date-guest {
+  margin-top: 4rpx;
+  font-size: 22rpx;
+  color: #6b7280;
+}
+
+.detail-guest-row {
   margin-top: 8rpx;
-  font-size: 24rpx;
-  color: #9fb3c8;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
 }
 
-.hotel-address {
-  margin-top: 12rpx;
-  font-size: 24rpx;
-  color: #7b8794;
+.detail-date-guest-label {
+  font-size: 22rpx;
+  color: #6b7280;
+  margin-bottom: 4rpx;
 }
 
-.hotel-star {
-  margin-top: 8rpx;
+.detail-guest-controls {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.guest-btn {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 999rpx;
+  background-color: #e5e7eb;
+  text-align: center;
+  line-height: 40rpx;
+  font-size: 26rpx;
+  color: #374151;
+}
+
+.guest-count {
   font-size: 24rpx;
-  color: #f59e0b;
+  color: #111827;
 }
 
 .section {
-  margin-top: 20rpx;
+  margin: 0 24rpx 16rpx;
   background-color: #ffffff;
   border-radius: 24rpx;
   padding: 24rpx 24rpx 28rpx;
+}
+
+.detail-intro {
+  margin-top: 8rpx;
+  background: #eff6ff;
+  border-radius: 20rpx;
+  border-left: 8rpx solid #3b82f6;
 }
 
 .section-title {
@@ -59,15 +251,15 @@
 
 .room-card {
   margin-top: 16rpx;
-  padding-top: 12rpx;
-  border-top: 1px solid #e4e7eb;
+  padding: 16rpx 18rpx;
+  border-radius: 18rpx;
+  background-color: #f9fafb;
 }
 
-.room-header {
+.room-card-main {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 4rpx;
+  align-items: flex-end;
 }
 
 .room-name {
@@ -76,14 +268,25 @@
 }
 
 .room-price {
-  font-size: 26rpx;
-  color: #2563eb;
-  font-weight: 500;
+  font-size: 30rpx;
+  color: #ef4444;
+  font-weight: 600;
 }
 
 .room-meta {
   font-size: 24rpx;
   color: #9fb3c8;
+}
+
+.room-price-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.room-price-unit {
+  font-size: 22rpx;
+  color: #6b7280;
 }
 
 .footer {

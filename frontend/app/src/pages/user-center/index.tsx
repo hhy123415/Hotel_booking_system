@@ -45,35 +45,45 @@ const UserCenterPage: FC = () => {
 
   return (
     <View className='page user-center-page'>
-      <View className='user-card'>
-        {user.avatar_url ? (
-          <Image
-            className='user-avatar'
-            src={user.avatar_url}
-            mode='aspectFill'
-            onClick={goProfileEdit}
-          />
-        ) : (
-          <View className='user-avatar-placeholder' onClick={goProfileEdit}>
-            <Text>设置头像</Text>
+      <View className='user-header'>
+        <View className='user-header-main'>
+          {user.avatar_url ? (
+            <Image
+              className='user-avatar'
+              src={user.avatar_url}
+              mode='aspectFill'
+              onClick={goProfileEdit}
+            />
+          ) : (
+            <View className='user-avatar-placeholder' onClick={goProfileEdit}>
+              <Text>设置头像</Text>
+            </View>
+          )}
+          <View className='user-header-info'>
+            <View className='user-name-row'>
+              <Text className='user-value'>{displayName}</Text>
+              {user.isAdmin && <Text className='user-badge'>管理员</Text>}
+            </View>
+            <Text className='user-label'>
+              欢迎来到酒店预订平台
+            </Text>
           </View>
-        )}
-        <Text className='user-label'>昵称</Text>
-        <Text className='user-value'>{displayName}</Text>
-        {user.isAdmin && (
-          <Text className='user-badge'>管理员</Text>
-        )}
+        </View>
         <Text className='user-edit-link' onClick={goProfileEdit}>
           编辑头像与昵称
         </Text>
-        <Text
-          className='user-edit-link'
-          style={{ marginTop: '16rpx' }}
+      </View>
+
+      <View className='user-menu-card'>
+        <View
+          className='user-menu-item'
           onClick={() => Taro.navigateTo({ url: '/pages/order-list/index' })}
         >
-          我的订单
-        </Text>
+          <Text className='user-menu-title'>我的订单</Text>
+          <Text className='user-menu-arrow'>›</Text>
+        </View>
       </View>
+
       <Button className='logout-btn' type='default' onClick={handleLogout}>
         退出登录
       </Button>
